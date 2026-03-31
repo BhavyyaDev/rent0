@@ -4,27 +4,25 @@ import { Item } from '@prisma/client';
 
 export function ItemCard({ item }: { item: Item }) {
   return (
-    <Link href={`/items/${item.id}`} className="block transition-transform hover:-translate-y-1 hover:shadow-lg rounded-2xl overflow-hidden h-full">
-      <Card className="h-full border shadow-sm rounded-2xl overflow-hidden flex flex-col bg-card">
+    <Link href={`/items/${item.id}`} className="group block h-full">
+      <Card className="h-full border border-slate-200/60 shadow-sm transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] rounded-[24px] overflow-hidden flex flex-col bg-white">
         {item.imageUrl ? (
-          <div className="w-full h-48 bg-muted relative">
-            <img src={item.imageUrl} alt={item.title} className="object-cover w-full h-full" />
+          <div className="w-full h-56 bg-slate-100 relative overflow-hidden">
+            <img src={item.imageUrl} alt={item.title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105" />
           </div>
         ) : (
-          <div className="w-full h-48 bg-muted flex items-center justify-center text-muted-foreground">
-            No Image
+          <div className="w-full h-56 bg-slate-50 flex items-center justify-center text-slate-400 border-b border-slate-100/50">
+            <span className="text-sm font-medium">No Image</span>
           </div>
         )}
-        <CardHeader className="p-4 pb-2">
-          <h3 className="font-semibold text-lg line-clamp-1">{item.title}</h3>
-        </CardHeader>
-        <CardContent className="p-4 pt-0 flex-grow">
-          <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
-        </CardContent>
-        <CardFooter className="p-4 pt-0 flex items-baseline gap-1 mt-auto">
-          <span className="font-bold text-lg text-primary">${item.pricePerDay.toFixed(2)}</span>
-          <span className="text-sm text-muted-foreground">/ day</span>
-        </CardFooter>
+        <div className="p-5 flex flex-col flex-grow">
+          <h3 className="font-semibold text-lg text-slate-900 tracking-tight line-clamp-1 mb-1">{item.title}</h3>
+          <p className="text-sm text-slate-500 leading-relaxed line-clamp-2 mb-4">{item.description}</p>
+          <div className="mt-auto flex items-baseline gap-1">
+            <span className="font-bold text-lg text-slate-900">${item.pricePerDay.toFixed(2)}</span>
+            <span className="text-sm text-slate-500 font-medium">/ day</span>
+          </div>
+        </div>
       </Card>
     </Link>
   );
