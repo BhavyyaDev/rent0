@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { ItemCard } from '@/components/item-card';
+import { ShieldCheck } from 'lucide-react';
 
 export default async function Home() {
   const items = await prisma.item.findMany({
@@ -7,11 +8,19 @@ export default async function Home() {
   });
 
   return (
-    <div className="container mx-auto px-4 md:px-6 lg:px-8 py-12 lg:py-16 max-w-7xl">
-      <div className="mb-10">
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">Available Items</h1>
-        <p className="text-slate-500 mt-2 text-lg">Explore the latest gear, electronics, and essentials available for rent.</p>
+    <>
+      <div className="w-full bg-emerald-50/50 border-b border-emerald-100/50 py-3 px-4">
+        <p className="text-sm font-medium text-emerald-800 flex items-center justify-center gap-2 tracking-tight">
+          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          Safe, trusted rentals — built for students
+        </p>
       </div>
+
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 py-12 lg:py-16 max-w-7xl">
+        <div className="mb-10">
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">Available Items</h1>
+          <p className="text-slate-500 mt-2 text-lg">Explore the latest gear, electronics, and essentials available for rent.</p>
+        </div>
       
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 py-32 bg-slate-50 border border-slate-200/60 rounded-[32px] shadow-sm text-center">
@@ -31,5 +40,6 @@ export default async function Home() {
         </div>
       )}
     </div>
+    </>
   );
 }
