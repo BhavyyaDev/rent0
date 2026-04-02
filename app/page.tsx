@@ -2,8 +2,11 @@ import { prisma } from '@/lib/prisma';
 import { ItemCard } from '@/components/item-card';
 import { ShieldCheck, Camera, Speaker, Gamepad2, Laptop } from 'lucide-react';
 import { CategoryBar } from '@/components/category-bar';
+import { syncUser } from '@/lib/syncUser';
 
 export default async function Home(props: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
+  // Synchronize authenticated user with database
+  await syncUser();
   const searchParams = await props.searchParams;
   const categoryFilter = searchParams.category;
 
