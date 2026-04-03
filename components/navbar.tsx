@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { UserButton, useAuth } from '@clerk/nextjs';
+import { UserButton, useUser } from '@clerk/nextjs';
 
 export function Navbar() {
-  const { userId, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded } = useUser();
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl border-b border-slate-200/50">
@@ -15,7 +15,7 @@ export function Navbar() {
           RentO
         </Link>
         <div className="flex items-center gap-4">
-          {isLoaded && userId ? (
+          {!isLoaded ? null : isSignedIn ? (
             <>
               <Link href="/items/add">
                 <Button className="rounded-full px-5 h-10 font-bold shadow-sm hover:shadow-md transition-all bg-slate-900 text-white hover:bg-slate-800">
@@ -27,13 +27,13 @@ export function Navbar() {
                 <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
               </div>
             </>
-          ) : isLoaded && !userId ? (
+          ) : (
             <Link href="/sign-in">
               <Button variant="outline" className="rounded-full px-6 h-10 font-bold shadow-sm hover:shadow-md transition-all border-slate-200 text-slate-700 hover:bg-slate-50">
                 Sign In
               </Button>
             </Link>
-          ) : null}
+          )}
         </div>
       </div>
     </nav>
