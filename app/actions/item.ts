@@ -3,8 +3,14 @@
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { currentUser } from '@clerk/nextjs/server';
 
 export async function createItem(prevState: any, formData: FormData) {
+  const user = await currentUser();
+  if (!user) {
+    return { error: 'You must be logged in to create an item.' };
+  }
+
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
   const pricePerDay = parseFloat(formData.get('pricePerDay') as string);
@@ -21,6 +27,7 @@ export async function createItem(prevState: any, formData: FormData) {
         description,
         pricePerDay,
         imageUrl: imageUrl || null,
+        ownerId: user.id,
       },
     });
 

@@ -24,6 +24,9 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
   const items = await prisma.item.findMany({
     where: whereClause,
     orderBy: { createdAt: 'desc' },
+    include: {
+      owner: true,
+    },
   });
 
   const popularItems = [...items].reverse().slice(0, 4);

@@ -20,6 +20,8 @@ model Item {
   imageUrl    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id])
 }
 
 model User {
@@ -28,4 +30,5 @@ model User {
   name       String?
   trustScore Int      @default(100)
   createdAt  DateTime @default(now())
+  items      Item[]
 }
