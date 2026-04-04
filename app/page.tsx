@@ -4,6 +4,9 @@ import { ShieldCheck, Camera, Speaker, Gamepad2, Laptop } from 'lucide-react';
 import { CategoryBar } from '@/components/category-bar';
 import { syncUser } from '@/lib/syncUser';
 
+// force dynamic page
+export const dynamic = "force-dynamic";
+
 export default async function Home(props: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
   // Synchronize authenticated user with database
   await syncUser();
@@ -44,7 +47,7 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
 
       <div className="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 pt-8 pb-16">
         <CategoryBar />
-      
+
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 sm:p-12 py-24 text-center mt-12 bg-[#F7F7F7] rounded-[16px]">
             <h3 className="text-2xl font-[600] text-[#222222] mb-3">
