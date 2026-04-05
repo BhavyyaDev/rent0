@@ -13,10 +13,10 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
   const searchParams = await props.searchParams;
   const categoryFilter = searchParams.category;
 
-
   // Fetch real items from the database
   const items = await prisma.item.findMany({
-    where: categoryFilter ? { description: { contains: categoryFilter } }
+    where: categoryFilter
+      ? { description: { contains: categoryFilter } }
       : {},
     include: { owner: true },
     orderBy: { createdAt: 'desc' },
@@ -24,7 +24,6 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
 
   const popularItems = [...items].slice(0, 4);
   const recentItems = items.slice(0, 8);
-
 
   return (
     <>
@@ -55,8 +54,9 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
                 Browse Items
               </h2>
             </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-10 mb-16">
-              {items.map((item) => (
+              {items.map((item: any) => (
                 <ItemCard key={item.id} item={item} />
               ))}
             </div>
