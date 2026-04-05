@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { currentUser } from '@clerk/nextjs/server';
+import { prisma } from '@/lib/db';
 
 export async function createItem(prevState: any, formData: FormData) {
   const user = await currentUser();
@@ -20,25 +21,23 @@ export async function createItem(prevState: any, formData: FormData) {
   }
 
   try {
-    console.log(`[Item Action] DB disabled - Mocking create item: "${title}" for userId: ${user.id}`);
-    
-    // We don't call prisma.item.create anymore
-    const mockItem = {
-      id: "mock-" + Math.random().toString(36).substring(7),
-      title,
-      description,
-      pricePerDay,
-      imageUrl: imageUrl || null,
-      ownerId: user.id,
-      createdAt: new Date(),
-    };
+    // Create the item in the database
+    const item = await prisma.item.create({
+      data: {
+        title,
+        description,
+        pricePerDay,
+        imageUrl: imageUrl || null,
+        ownerId: user.id,
+      },
+    });
 
-    console.log(`[Item Action] Mock item created:`, mockItem);
+    console.log(`[Item Action] Item created in DB:`, item.id);
 
     revalidatePath('/');
-    return { success: true, itemId: mockItem.id };
+    return { success: true, itemId: item.id };
   } catch (error) {
-    console.error(`[Item Action] Failed to mock create item:`, error);
+    console.error(`[Item Action] Failed to create item:`, error);
     return { error: 'Something went wrong while saving the item.' };
   }
 }

@@ -2,22 +2,26 @@ import { ItemCard } from '@/components/item-card';
 import { ShieldCheck, Camera, Speaker, Gamepad2, Laptop } from 'lucide-react';
 import { CategoryBar } from '@/components/category-bar';
 import { syncUser } from '@/lib/syncUser';
+import { prisma } from '@/lib/db';
 
 // force dynamic page
 export const dynamic = "force-dynamic";
 
 export default async function Home(props: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
-  // Synchronize authenticated user (mocked)
-  await syncUser();
+  // Synchronize authenticated user
+  const user = await syncUser();
   const searchParams = await props.searchParams;
   const categoryFilter = searchParams.category;
 
-  console.log("DB disabled - Mocking homepage items");
   
-  // Replace database fetch with empty mock data
-  const items: any[] = [];
+  // Fetch real items from the database
+  const items = await prisma.item.findMany({
+    where: categoryFilter ? { description: { contains: categoryFilter, mode: 'insensitive' } } : {},
+    include: { owner: true },
+    orderBy: { createdAt: 'desc' },
+  });
 
-  const popularItems = [...items].reverse().slice(0, 4);
+  const popularItems = [...items].slice(0, 4);
   const recentItems = items.slice(0, 8);
 
 
