@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, ShieldCheck } from 'lucide-react';
+import { prisma } from '@/lib/db';
 
 export default async function ItemDetailPage({
   params,
@@ -12,10 +13,12 @@ export default async function ItemDetailPage({
 }) {
   const { id } = await params;
   
-  console.log(`[Item Detail] DB disabled - Item ID: ${id}`);
   
-  // Replace database fetch with null as no items exist in mock mode
-  const item: any = null;
+  // Fetch the item from the database
+  const item = await prisma.item.findUnique({
+    where: { id },
+    include: { owner: true }
+  });
 
   if (!item) {
     notFound();
