@@ -13,10 +13,17 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
   const searchParams = await props.searchParams;
   const categoryFilter = searchParams.category;
 
-  
+
   // Fetch real items from the database
   const items = await prisma.item.findMany({
-    where: categoryFilter ? { description: { contains: categoryFilter, mode: 'insensitive' } } : {},
+    where: categoryFilter
+      ? {
+        description: {
+          contains: categoryFilter.toLowerCase(),
+        },
+      }
+      : {},
+
     include: { owner: true },
     orderBy: { createdAt: 'desc' },
   });
