@@ -16,14 +16,8 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
 
   // Fetch real items from the database
   const items = await prisma.item.findMany({
-    where: categoryFilter
-      ? {
-        description: {
-          contains: categoryFilter.toLowerCase(),
-        },
-      }
+    where: categoryFilter ? { description: { contains: categoryFilter } }
       : {},
-
     include: { owner: true },
     orderBy: { createdAt: 'desc' },
   });
