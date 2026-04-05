@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/prisma';
 import { ItemCard } from '@/components/item-card';
 import { ShieldCheck, Camera, Speaker, Gamepad2, Laptop } from 'lucide-react';
 import { CategoryBar } from '@/components/category-bar';
@@ -8,32 +7,19 @@ import { syncUser } from '@/lib/syncUser';
 export const dynamic = "force-dynamic";
 
 export default async function Home(props: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
-  // Synchronize authenticated user with database
+  // Synchronize authenticated user (mocked)
   await syncUser();
   const searchParams = await props.searchParams;
   const categoryFilter = searchParams.category;
 
-  // We apply a basic text-search filter if a category is selected,
-  let whereClause = {};
-  if (categoryFilter) {
-    whereClause = {
-      OR: [
-        { title: { contains: categoryFilter } },
-        { description: { contains: categoryFilter } }
-      ]
-    };
-  }
-
-  const items = await prisma.item.findMany({
-    where: whereClause,
-    orderBy: { createdAt: 'desc' },
-    include: {
-      owner: true,
-    },
-  });
+  console.log("DB disabled - Mocking homepage items");
+  
+  // Replace database fetch with empty mock data
+  const items: any[] = [];
 
   const popularItems = [...items].reverse().slice(0, 4);
   const recentItems = items.slice(0, 8);
+
 
   return (
     <>

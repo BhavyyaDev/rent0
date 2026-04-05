@@ -2,9 +2,25 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Item } from '@prisma/client';
+
+
+export interface Item {
+  id: string;
+  title: string;
+  description: string;
+  pricePerDay: number;
+  imageUrl: string | null;
+  ownerId: string;
+  createdAt: Date;
+  owner?: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
+}
 
 export function ItemCard({ item }: { item: Item }) {
+
   const fallbackImg = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80';
   const [imgSrc, setImgSrc] = useState(item.imageUrl || fallbackImg);
 
