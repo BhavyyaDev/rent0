@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,13 +11,16 @@ export default async function ItemDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const item = await prisma.item.findUnique({
-    where: { id },
-  });
+  
+  console.log(`[Item Detail] DB disabled - Item ID: ${id}`);
+  
+  // Replace database fetch with null as no items exist in mock mode
+  const item: any = null;
 
   if (!item) {
     notFound();
   }
+
 
   return (
     <div className="container mx-auto px-4 lg:px-8 py-12 max-w-6xl">

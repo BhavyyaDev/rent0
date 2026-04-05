@@ -1,5 +1,4 @@
 import { currentUser } from '@clerk/nextjs/server';
-import { prisma } from './prisma';
 
 export async function syncUser() {
   try {
@@ -15,22 +14,19 @@ export async function syncUser() {
 
     if (!email) return null; // Email is required in schema
 
-    const dbUser = await prisma.user.upsert({
-      where: { id: user.id },
-      update: {
-        email,
-        name,
-      },
-      create: {
-        id: user.id,
-        email,
-        name,
-      },
-    });
-
-    return dbUser;
+    console.log("DB disabled - Mocking user sync");
+    
+    // Return a mock user object that matches the expected User type
+    return {
+      id: user.id,
+      email,
+      name,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
   } catch (error) {
-    console.error("Error syncing user to database:", error);
+    console.error("Error syncing user:", error);
     return null;
   }
 }
+
