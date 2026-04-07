@@ -10,6 +10,9 @@ import { createItem } from '@/app/actions/item';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
+
+export const dynamic = "force-dynamic";
+
 export default function AddItemPage() {
   const [state, formAction, pending] = useActionState(createItem, null);
 
@@ -98,8 +101,8 @@ export default function AddItemPage() {
               </div>
 
               <div className="pt-6">
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={pending}
                   className="w-full rounded-full h-14 text-lg font-bold shadow-md hover:shadow-lg transition-all bg-[#10b981] text-white hover:bg-[#059669]"
                 >

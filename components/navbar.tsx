@@ -17,6 +17,9 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           {!isLoaded ? null : isSignedIn ? (
             <>
+              <Link href="/dashboard" className="text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors mr-2">
+                Dashboard
+              </Link>
               <Link href="/items/add">
                 <Button className="rounded-full px-5 h-10 font-bold shadow-sm hover:shadow-md transition-all bg-slate-900 text-white hover:bg-slate-800">
                   <Plus className="w-4 h-4 mr-1" strokeWidth={3} />
