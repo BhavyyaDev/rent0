@@ -94,6 +94,28 @@ export function EditItemForm({ item }: { item: Item }) {
           </div>
 
           <div className="space-y-3">
+            <Label htmlFor="category" className="text-slate-800 font-semibold">Category</Label>
+            <div className="relative">
+              <select
+                id="category"
+                name="category"
+                defaultValue={item.category}
+                required
+                className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl h-14 px-4 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none cursor-pointer"
+              >
+                <option value="camera">Camera</option>
+                <option value="audio">Audio</option>
+                <option value="gaming">Gaming</option>
+                <option value="tech">Tech</option>
+                <option value="other">Other</option>
+              </select>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
             <Label htmlFor="description" className="text-slate-800 font-semibold">Description</Label>
             <Textarea
               id="description"

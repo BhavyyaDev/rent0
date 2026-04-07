@@ -25,4 +25,5 @@ model Item {
   updatedAt   DateTime @updatedAt
   ownerId     String
   owner       User     @relation(fields: [ownerId], references: [id])
+  category    String   @default("Other")
 }

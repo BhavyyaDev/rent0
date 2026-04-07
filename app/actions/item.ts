@@ -15,6 +15,7 @@ export async function createItem(prevState: any, formData: FormData) {
   const description = formData.get('description') as string;
   const pricePerDay = parseFloat(formData.get('pricePerDay') as string);
   const imageUrl = formData.get('imageUrl') as string;
+  const category = (formData.get('category') as string) || 'Other';
 
   if (!title || !description || isNaN(pricePerDay)) {
     return { error: 'Invalid input. Please check your fields.' };
@@ -29,6 +30,7 @@ export async function createItem(prevState: any, formData: FormData) {
         pricePerDay,
         imageUrl: imageUrl || null,
         ownerId: user.id,
+        category,
       },
     });
 
@@ -52,6 +54,7 @@ export async function updateItem(itemId: string, prevState: any, formData: FormD
   const description = formData.get('description') as string;
   const pricePerDay = parseFloat(formData.get('pricePerDay') as string);
   const imageUrl = formData.get('imageUrl') as string;
+  const category = (formData.get('category') as string) || 'Other';
 
   if (!title || !description || isNaN(pricePerDay)) {
     return { error: 'Invalid input. Please check your fields.' };
@@ -74,6 +77,7 @@ export async function updateItem(itemId: string, prevState: any, formData: FormD
         description,
         pricePerDay,
         imageUrl: imageUrl || null,
+        category,
       },
     });
 

@@ -7,10 +7,11 @@ import { Suspense } from 'react';
 
 const CATEGORIES = [
   { name: 'All Items', icon: Sparkles, value: '' },
-  { name: 'Cameras', icon: Camera, value: 'camera' },
-  { name: 'Speakers', icon: Speaker, value: 'speaker' },
+  { name: 'Camera', icon: Camera, value: 'camera' },
+  { name: 'Audio', icon: Speaker, value: 'audio' },
   { name: 'Gaming', icon: Gamepad2, value: 'gaming' },
-  { name: 'Laptops', icon: Laptop, value: 'laptop' },
+  { name: 'Tech', icon: Laptop, value: 'tech' },
+  { name: 'Other', icon: Sparkles, value: 'other' },
 ];
 
 function CategoryList() {
