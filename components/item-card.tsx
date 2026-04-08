@@ -26,28 +26,33 @@ export function ItemCard({ item }: { item: Item }) {
 
   return (
     <Link href={`/items/${item.id}`} className="group block focus:outline-none cursor-pointer">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 transition-all duration-300 ease-out group-hover:-translate-y-1">
         {/* Image Section */}
-        <div className="w-full aspect-[4/3] sm:aspect-square relative overflow-hidden rounded-[12px] bg-[#EBEBEB]">
+        <div className="w-full aspect-[4/3] relative overflow-hidden rounded-[20px] bg-[#F7F7F7] shadow-sm group-hover:shadow-xl transition-shadow duration-300">
           <img 
             src={imgSrc} 
             alt={item.title} 
             onError={() => setImgSrc(fallbackImg)}
-            className="object-cover w-full h-full transition-transform duration-500 ease-out group-hover:scale-105" 
+            className="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-110" 
           />
+          {/* Subtle overlay for better text contrast if needed -- following airbnb's minimal style */}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
         </div>
 
         {/* Content Section */}
         <div className="flex flex-col px-0.5">
-          <h3 className="font-[600] text-[16px] text-[#222222] line-clamp-1 leading-[20px]">
-            {item.title}
-          </h3>
-          <p className="text-[15px] mt-[2px] text-[#6A6A6A] line-clamp-1 leading-[19px]">
+          <div className="flex justify-between items-start gap-2">
+            <h3 className="font-[600] text-[16px] text-[#222222] line-clamp-1 leading-[20px]">
+              {item.title}
+            </h3>
+            {/* Optional category tag if needed -- but user didn't ask for it specifically here */}
+          </div>
+          <p className="text-[14px] mt-[4px] text-[#717171] line-clamp-1 leading-[18px] font-medium">
             {item.description}
           </p>
-          <div className="mt-[6px] flex items-baseline">
+          <div className="mt-[8px] flex items-baseline gap-1">
             <span className="font-[600] text-[16px] text-[#222222]">₹{item.pricePerDay.toLocaleString()}</span>
-            <span className="text-[15px] text-[#222222] ml-1">/ day</span>
+            <span className="text-[15px] text-[#222222] font-normal">night</span>
           </div>
         </div>
       </div>

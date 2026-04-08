@@ -24,22 +24,22 @@ export function DashboardItemCard({ item }: { item: Item }) {
   };
 
   return (
-    <div className="group block relative bg-white rounded-[24px] border border-[#EBEBEB] p-3 transition-all hover:shadow-md">
+    <div className="group block relative bg-white rounded-[28px] border border-slate-100 p-2.5 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
       <div className="flex flex-col gap-3">
         {/* Image Section */}
-        <div className="w-full aspect-[4/3] relative overflow-hidden rounded-[16px] bg-[#F7F7F7]">
+        <div className="w-full aspect-[4/3] relative overflow-hidden rounded-[20px] bg-[#F7F7F7]">
           <img 
             src={imgSrc} 
             alt={item.title} 
             onError={() => setImgSrc(fallbackImg)}
-            className="object-cover w-full h-full transition-transform duration-500 ease-out group-hover:scale-105" 
+            className="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-110" 
           />
           
           {/* Action Overlay (Desktop) */}
-          <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 active:scale-95 duration-200">
             <Link href={`/items/${item.id}/edit`}>
-              <Button size="icon" variant="secondary" className="rounded-full shadow-lg bg-white/90 hover:bg-white text-slate-900 border-none h-10 w-10">
-                <Edit3 className="w-4 h-4" />
+              <Button size="icon" variant="secondary" className="rounded-full shadow-2xl bg-white/95 hover:bg-white text-slate-900 border-none h-11 w-11 transition-all hover:scale-110">
+                <Edit3 className="w-5 h-5" />
               </Button>
             </Link>
             <Button 
@@ -47,39 +47,42 @@ export function DashboardItemCard({ item }: { item: Item }) {
               variant="destructive" 
               onClick={handleDelete}
               disabled={isPending}
-              className="rounded-full shadow-lg h-10 w-10"
+              className="rounded-full shadow-2xl h-11 w-11 transition-all hover:scale-110"
             >
-              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
             </Button>
           </div>
         </div>
 
         {/* Content Section */}
-        <div className="flex flex-col px-1 pb-1">
+        <div className="flex flex-col px-2 pb-2">
           <div className="flex justify-between items-start gap-2">
             <h3 className="font-[600] text-[16px] text-[#222222] line-clamp-1 leading-[20px]">
               {item.title}
             </h3>
           </div>
-          <div className="mt-[4px] flex items-baseline">
-            <span className="font-[600] text-[15px] text-[#222222]">₹{item.pricePerDay.toLocaleString()}</span>
-            <span className="text-[14px] text-[#6A6A6A] ml-1">/ day</span>
+          <p className="text-[14px] mt-[4px] text-[#717171] line-clamp-1 font-medium italic">
+            Management View
+          </p>
+          <div className="mt-[8px] flex items-baseline gap-1">
+            <span className="font-[600] text-[16px] text-[#222222]">₹{item.pricePerDay.toLocaleString()}</span>
+            <span className="text-[14px] text-[#717171] font-medium">night</span>
           </div>
           
           {/* Mobile Actions */}
-          <div className="mt-4 flex gap-2 md:hidden">
+          <div className="mt-5 flex gap-2 md:hidden">
             <Link href={`/items/${item.id}/edit`} className="flex-1">
-              <Button variant="outline" className="w-full rounded-xl flex items-center gap-2 h-10 text-sm font-semibold">
-                <Edit3 className="w-3.5 h-3.5" /> Edit
+              <Button variant="outline" className="w-full rounded-2xl flex items-center gap-2 h-11 text-sm font-bold border-slate-200">
+                <Edit3 className="w-4 h-4" /> Edit
               </Button>
             </Link>
             <Button 
               variant="destructive" 
               onClick={handleDelete}
               disabled={isPending}
-              className="flex-1 rounded-xl flex items-center gap-2 h-10 text-sm font-semibold"
+              className="flex-1 rounded-2xl flex items-center gap-2 h-11 text-sm font-bold shadow-sm"
             >
-              {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               Delete
             </Button>
           </div>

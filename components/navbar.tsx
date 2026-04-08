@@ -15,6 +15,9 @@ export function Navbar() {
           RentO
         </Link>
         <div className="flex items-center gap-4">
+          <Link href="/explore" className="text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors">
+            Explore
+          </Link>
           {!isLoaded ? null : isSignedIn ? (
             <>
               <Link href="/dashboard" className="text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors mr-2">

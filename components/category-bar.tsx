@@ -25,7 +25,7 @@ function CategoryList() {
         return (
           <Link
             key={cat.name}
-            href={cat.value ? `/?category=${cat.value}` : '/'}
+            href={cat.value ? `/explore?category=${cat.value}` : '/explore'}
             className={`flex-shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-full border shadow-sm font-semibold transition-all active:scale-95 duration-200 outline-none ${
               isSelected
                 ? 'bg-slate-900 border-slate-900 text-white shadow-md'

@@ -15,7 +15,7 @@ export async function createItem(prevState: any, formData: FormData) {
   const description = formData.get('description') as string;
   const pricePerDay = parseFloat(formData.get('pricePerDay') as string);
   const imageUrl = formData.get('imageUrl') as string;
-  const category = (formData.get('category') as string) || 'Other';
+  const category = (formData.get('category') as string) || 'other';
 
   if (!title || !description || isNaN(pricePerDay)) {
     return { error: 'Invalid input. Please check your fields.' };
@@ -31,12 +31,13 @@ export async function createItem(prevState: any, formData: FormData) {
         imageUrl: imageUrl || null,
         ownerId: user.id,
         category,
-      },
+      } as any,
     });
 
     console.log(`[Item Action] Item created in DB:`, item.id);
 
     revalidatePath('/');
+    revalidatePath('/explore');
     return { success: true, itemId: item.id };
   } catch (error) {
     console.error(`[Item Action] Failed to create item:`, error);
@@ -54,7 +55,7 @@ export async function updateItem(itemId: string, prevState: any, formData: FormD
   const description = formData.get('description') as string;
   const pricePerDay = parseFloat(formData.get('pricePerDay') as string);
   const imageUrl = formData.get('imageUrl') as string;
-  const category = (formData.get('category') as string) || 'Other';
+  const category = (formData.get('category') as string) || 'other';
 
   if (!title || !description || isNaN(pricePerDay)) {
     return { error: 'Invalid input. Please check your fields.' };
@@ -78,10 +79,11 @@ export async function updateItem(itemId: string, prevState: any, formData: FormD
         pricePerDay,
         imageUrl: imageUrl || null,
         category,
-      },
+      } as any,
     });
 
     revalidatePath('/');
+    revalidatePath('/explore');
     revalidatePath(`/items/${itemId}`);
     revalidatePath('/dashboard');
     return { success: true, itemId: updatedItem.id };
@@ -112,6 +114,7 @@ export async function deleteItem(itemId: string) {
     });
 
     revalidatePath('/');
+    revalidatePath('/explore');
     revalidatePath('/dashboard');
     return { success: true };
   } catch (error) {
