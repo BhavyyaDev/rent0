@@ -66,7 +66,7 @@ export function DashboardItemCard({ item }: { item: Item }) {
           </p>
           <div className="mt-[8px] flex items-baseline gap-1">
             <span className="font-[600] text-[16px] text-[#222222]">₹{item.pricePerDay.toLocaleString()}</span>
-            <span className="text-[14px] text-[#717171] font-medium">night</span>
+            <span className="text-[14px] text-[#717171] font-medium">day</span>
           </div>
           
           {/* Mobile Actions */}

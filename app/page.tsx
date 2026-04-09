@@ -58,13 +58,14 @@ export default function Home() {
             </p>
 
             {/* Search Bar */}
-            <div className="max-w-3xl mx-auto bg-white rounded-[32px] shadow-2xl shadow-slate-200 border border-slate-100 p-2 md:p-3 flex flex-col md:flex-row items-center gap-2">
+            <form action="/explore" method="GET" className="max-w-3xl mx-auto bg-white rounded-[32px] shadow-2xl shadow-slate-200 border border-slate-100 p-2 md:p-3 flex flex-col md:flex-row items-center gap-2">
               <div className="flex-1 w-full flex items-center px-4 gap-3">
                 <Search className="w-5 h-5 text-slate-400 shrink-0" />
                 <input 
-                  type="text" 
+                  type="text"
+                  name="search" 
                   placeholder="What are you looking for?" 
-                  className="w-full h-12 outline-none text-slate-800 font-medium placeholder:text-slate-400"
+                  className="w-full h-12 outline-none text-slate-800 font-medium placeholder:text-slate-400 bg-transparent"
                 />
               </div>
               <div className="hidden md:block w-px h-8 bg-slate-100 mx-2" />
@@ -72,12 +73,10 @@ export default function Home() {
                 <Calendar className="w-5 h-5 text-slate-400 shrink-0" />
                 <span className="text-slate-400 font-medium cursor-default">Add dates</span>
               </div>
-              <Link href="/explore" className="w-full md:w-auto">
-                <Button className="w-full md:w-auto rounded-full h-14 px-8 bg-slate-900 text-white hover:bg-slate-800 text-lg font-bold transition-all active:scale-95">
-                  Search
-                </Button>
-              </Link>
-            </div>
+              <Button type="submit" className="w-full md:w-auto rounded-full h-14 px-8 bg-slate-900 text-white hover:bg-slate-800 text-lg font-bold transition-all active:scale-95">
+                Search
+              </Button>
+            </form>
           </div>
         </div>
       </section>

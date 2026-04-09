@@ -52,7 +52,7 @@ export function ItemCard({ item }: { item: Item }) {
           </p>
           <div className="mt-[8px] flex items-baseline gap-1">
             <span className="font-[600] text-[16px] text-[#222222]">₹{item.pricePerDay.toLocaleString()}</span>
-            <span className="text-[15px] text-[#222222] font-normal">night</span>
+            <span className="text-[15px] text-[#222222] font-normal">day</span>
           </div>
         </div>
       </div>
