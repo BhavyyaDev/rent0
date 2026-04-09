@@ -1,9 +1,7 @@
 import { notFound } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { ArrowLeft, Calendar, ShieldCheck, Camera } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Camera } from 'lucide-react';
 import { prisma } from '@/lib/db';
 import { BookingWidget } from '@/components/booking-widget';
 
@@ -16,7 +14,6 @@ export default async function ItemDetailPage({
 }) {
   const { id } = await params;
 
-
   // Fetch the item from the database
   const item = await prisma.item.findUnique({
     where: { id },
@@ -27,57 +24,69 @@ export default async function ItemDetailPage({
     notFound();
   }
 
-
   return (
-    <div className="container mx-auto px-4 lg:px-8 py-12 max-w-6xl">
+    <div className="container mx-auto px-4 lg:px-8 py-10 max-w-7xl">
       <Link href="/" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 mb-8 transition-colors">
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Items
       </Link>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
-        {/* Image Section */}
-        <div className="rounded-[32px] overflow-hidden bg-slate-50 aspect-square relative border border-slate-200/60 shadow-sm flex items-center justify-center">
-          {item?.imageUrl ? (
-            <img src={item.imageUrl} alt={item?.title || 'Item'} className="object-cover w-full h-full" />
-          ) : (
-            <div className="flex flex-col items-center justify-center p-6 text-slate-400 gap-3">
-              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
-                <Camera className="w-8 h-8 text-slate-300" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
+        {/* LEFT COLUMN: Image, Title, Description */}
+        <div className="lg:col-span-2 flex flex-col">
+          <div className="rounded-[32px] overflow-hidden bg-slate-50 relative border border-slate-200/60 shadow-sm flex items-center justify-center mb-10 w-full aspect-video md:aspect-[4/3] lg:aspect-[16/10]">
+            {item?.imageUrl ? (
+              <img src={item.imageUrl} alt={item?.title || 'Item'} className="object-cover w-full h-full" />
+            ) : (
+              <div className="flex flex-col items-center justify-center p-6 text-slate-400 gap-3">
+                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
+                  <Camera className="w-8 h-8 text-slate-300" />
+                </div>
+                <span className="font-semibold text-lg text-slate-500">Image unavailable</span>
+                <span className="text-sm">This owner hasn't uploaded a photo yet.</span>
               </div>
-              <span className="font-semibold text-lg text-slate-500">Image unvailable</span>
-              <span className="text-sm">This owner hasn't uploaded a photo yet.</span>
+            )}
+          </div>
+
+          <div className="flex flex-col px-1">
+            <Badge variant="outline" className="w-fit mb-5 rounded-full border-slate-200 text-emerald-600 px-4 py-1.5 shadow-sm font-semibold bg-emerald-50 text-sm">Available Now</Badge>
+            <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 mb-6 leading-[1.1]">{item?.title || 'Untitled Item'}</h1>
+
+            <div className="prose prose-sm max-w-none pt-4 border-t border-slate-100">
+              <h3 className="text-xl font-bold text-slate-900 mb-3">Description</h3>
+              <p className="text-slate-600 leading-relaxed whitespace-pre-line text-[17px]">{item?.description || 'No description provided by the owner.'}</p>
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Details Section */}
-        <div className="flex flex-col py-4">
-          <Badge variant="outline" className="w-fit mb-5 rounded-full border-slate-200 text-emerald-600 px-3 py-1 shadow-sm font-semibold bg-emerald-50 text-sm">Available Now</Badge>
-          <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 mb-4 truncate">{item?.title || 'Untitled Item'}</h1>
-          <div className="text-3xl font-semibold text-slate-900 mb-8">
-            ${(item?.pricePerDay || 0).toFixed(2)} <span className="text-lg font-medium text-slate-500 tracking-normal">/ day</span>
-          </div>
-
-          <div className="prose prose-sm max-w-none flex-1 mb-8">
-            <h3 className="text-lg font-semibold text-slate-900 mb-3">Description</h3>
-            <p className="text-slate-600 leading-relaxed whitespace-pre-line text-base">{item?.description || 'No description provided by the owner.'}</p>
-          </div>
-
-          <Card className="rounded-3xl border border-slate-200/60 shadow-sm bg-slate-50/50 mb-6">
-            <CardContent className="p-5 flex flex-col gap-4">
-              <div className="flex items-center gap-3 text-slate-700">
-                <ShieldCheck className="h-6 w-6 text-emerald-500" />
-                <span className="font-medium">RentO Protection Guarantee</span>
+        {/* RIGHT COLUMN: Sticky Booking Widget */}
+        <div className="flex flex-col relative relative z-10">
+          <div className="sticky top-28 bg-white border border-slate-200 shadow-2xl shadow-slate-200/50 rounded-[32px] p-6 sm:p-8 flex flex-col">
+            <div className="flex flex-col mb-6">
+              <div className="text-4xl font-extrabold text-slate-900 tracking-tight">
+                ${(item?.pricePerDay || 0).toFixed(2)} <span className="text-xl font-medium text-slate-500 tracking-normal">/ day</span>
               </div>
-              <div className="flex items-center gap-3 text-slate-700">
-                <Calendar className="h-6 w-6 text-blue-500" />
-                <span className="font-medium">Minimum 1 day rental</span>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          <BookingWidget pricePerDay={item.pricePerDay} />
+            <div className="flex items-center gap-4 mb-8 pb-8 border-b border-slate-100">
+              <div className="w-14 h-14 bg-slate-900 rounded-full flex items-center justify-center shadow-md">
+                <span className="text-white font-bold text-xl">{item?.owner?.name?.charAt(0)?.toUpperCase() || 'U'}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="font-bold text-slate-900 text-lg leading-tight">{item?.owner?.name || 'Unknown User'}</span>
+                <span className="text-sm font-medium text-emerald-600 mt-0.5 flex items-center gap-1">
+                  <ShieldCheck className="w-4 h-4" /> Verified Owner
+                </span>
+              </div>
+            </div>
+
+            <BookingWidget pricePerDay={item?.pricePerDay || 0} />
+            
+            <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-center gap-2 text-slate-500 text-sm font-medium opacity-80">
+              <ShieldCheck className="w-5 h-5 text-slate-400" />
+              Protected by RentO Guarantee
+            </div>
+          </div>
         </div>
       </div>
     </div>
