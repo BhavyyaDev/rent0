@@ -19,7 +19,7 @@ export interface Item {
   };
 }
 
-export function ItemCard({ item }: { item: Item }) {
+export function ItemCard({ item, dateFilterActive }: { item: Item, dateFilterActive?: boolean }) {
 
   const fallbackImg = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80';
   const [imgSrc, setImgSrc] = useState(item.imageUrl || fallbackImg);
@@ -50,9 +50,16 @@ export function ItemCard({ item }: { item: Item }) {
           <p className="text-[14px] mt-[4px] text-[#717171] line-clamp-1 leading-[18px] font-medium">
             {item.description}
           </p>
-          <div className="mt-[8px] flex items-baseline gap-1">
-            <span className="font-[600] text-[16px] text-[#222222]">₹{item.pricePerDay.toLocaleString()}</span>
-            <span className="text-[15px] text-[#222222] font-normal">day</span>
+          <div className="mt-[8px] flex flex-col gap-1.5">
+            <div className="flex items-baseline gap-1">
+              <span className="font-[600] text-[16px] text-[#222222]">₹{item.pricePerDay.toLocaleString()}</span>
+              <span className="text-[15px] text-[#222222] font-normal">day</span>
+            </div>
+            {dateFilterActive && (
+              <span className="text-[12px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200/60 w-fit px-2 py-1 rounded-md">
+                Available for selected dates
+              </span>
+            )}
           </div>
         </div>
       </div>
