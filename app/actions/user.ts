@@ -27,3 +27,21 @@ export async function toggleUserRole(currentRole: string) {
     return { error: 'Oops! Something went wrong updating your settings.' };
   }
 }
+
+export async function completeOnboarding(role: 'renter' | 'lender') {
+  const user = await currentUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  try {
+    await (prisma as any).user.update({
+      where: { id: user.id },
+      data: { role }
+    });
+
+    revalidatePath('/', 'layout');
+    return { success: true };
+  } catch (error) {
+    console.error(`[User Action] Failed to complete onboarding:`, error);
+    return { error: 'Failed to save selection' };
+  }
+}
