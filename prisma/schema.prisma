@@ -13,6 +13,7 @@ model User {
   trustScore Int      @default(100)
   createdAt  DateTime @default(now())
   items      Item[]
+  requests   Request[]
 }
 
 model Item {
@@ -26,4 +27,18 @@ model Item {
   ownerId     String
   owner       User     @relation(fields: [ownerId], references: [id])
   category    String   @default("Other")
+  requests    Request[]
+}
+
+model Request {
+  id        String   @id @default(cuid())
+  itemId    String
+  renterId  String
+  startDate DateTime
+  endDate   DateTime
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+
+  item   Item @relation(fields: [itemId], references: [id])
+  renter User @relation(fields: [renterId], references: [id])
 }

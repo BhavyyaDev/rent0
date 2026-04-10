@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { DashboardItemCard } from '@/components/dashboard-item-card';
+import { RequestActionButtons } from '@/components/request-action-buttons';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { PlusCircle, ShoppingBag, Package, Activity, Banknote } from 'lucide-react';
@@ -25,6 +26,22 @@ export default async function DashboardPage() {
 
   // Type cast to match the Item interface
   const items = rawItems as unknown as Item[];
+
+  // Fetch incoming rental requests for items owned by this user
+  const incomingRequests = await (prisma as any).request.findMany({
+    where: {
+      item: {
+        ownerId: userId,
+      },
+    },
+    include: {
+      item: true,
+      renter: true,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
 
   const totalListings = items.length;
   const activeListings = items.length;
@@ -91,7 +108,47 @@ export default async function DashboardPage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 mt-12">
+      <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 mt-12 flex flex-col gap-16">
+        
+        {/* Incoming Requests Section */}
+        {incomingRequests && incomingRequests.length > 0 && (
+          <div>
+            <h2 className="text-[22px] font-extrabold text-[#222222] mb-6">Requests for Your Items</h2>
+            <div className="bg-white rounded-[24px] border border-slate-200 overflow-hidden shadow-sm overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[700px]">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-[13px] tracking-widest text-slate-500 uppercase font-bold">
+                    <th className="p-5 font-bold">Item</th>
+                    <th className="p-5 font-bold">Renter</th>
+                    <th className="p-5 font-bold">Dates</th>
+                    <th className="p-5 font-bold">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {incomingRequests.map((req: any) => (
+                    <tr key={req.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="p-5">
+                        <div className="font-bold text-slate-900 line-clamp-1">{req.item.title}</div>
+                        <div className="text-sm font-medium text-emerald-600">${req.item.pricePerDay}/day</div>
+                      </td>
+                      <td className="p-5">
+                        <div className="font-bold text-slate-900">{req.renter.name || 'Anonymous User'}</div>
+                        <div className="text-sm font-medium text-slate-500">{req.renter.email}</div>
+                      </td>
+                      <td className="p-5 text-slate-600 font-bold whitespace-nowrap text-sm">
+                        {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
+                      </td>
+                      <td className="p-5 w-40">
+                        <RequestActionButtons requestId={req.id} status={req.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-[40px] border border-slate-100 shadow-sm mt-6">
             <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">

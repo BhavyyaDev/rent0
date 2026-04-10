@@ -17,6 +17,7 @@ export interface Item {
     name: string | null;
     email: string;
   };
+  requests?: any[];
 }
 
 export function ItemCard({ item, dateFilterActive }: { item: Item, dateFilterActive?: boolean }) {
@@ -24,11 +25,18 @@ export function ItemCard({ item, dateFilterActive }: { item: Item, dateFilterAct
   const fallbackImg = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80';
   const [imgSrc, setImgSrc] = useState(item.imageUrl || fallbackImg);
 
+  const hasAcceptedBookings = item.requests && item.requests.length > 0;
+
   return (
     <Link href={`/items/${item.id}`} className="group block focus:outline-none cursor-pointer">
-      <div className="flex flex-col gap-3 transition-all duration-300 ease-out group-hover:-translate-y-1">
+      <div className={`flex flex-col gap-3 transition-all duration-300 ease-out group-hover:-translate-y-1 ${hasAcceptedBookings ? 'opacity-85 grayscale-[0.15]' : ''}`}>
         {/* Image Section */}
         <div className="w-full aspect-[4/3] relative overflow-hidden rounded-[20px] bg-[#F7F7F7] shadow-sm group-hover:shadow-xl transition-shadow duration-300">
+          {hasAcceptedBookings && (
+            <span className="absolute top-3 left-3 bg-white/90 text-slate-800 text-[11px] font-extrabold px-3 py-1 rounded-full shadow-md z-10 border border-slate-200 uppercase tracking-wide backdrop-blur-md">
+              Partially Booked
+            </span>
+          )}
           <img 
             src={imgSrc} 
             alt={item.title} 

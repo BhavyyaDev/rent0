@@ -32,9 +32,17 @@ export default async function SearchPage(props: { searchParams: Promise<{ [key: 
   }
 
   // Fetch real items from the database
-  const items = await prisma.item.findMany({
+  const items = await (prisma as any).item.findMany({
     where: whereClause,
-    include: { owner: true } as any,
+    include: { 
+      owner: true,
+      requests: {
+        where: {
+          status: 'accepted',
+          endDate: { gte: new Date() }
+        }
+      }
+    },
     orderBy: { createdAt: 'desc' },
   });
 

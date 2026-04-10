@@ -1,12 +1,20 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from './ui/button';
+import { createRequest, checkAvailability } from '@/app/actions/request';
 
-export function BookingWidget({ pricePerDay }: { pricePerDay: number }) {
+export function BookingWidget({ itemId, pricePerDay }: { itemId: string, pricePerDay: number }) {
   const [showDates, setShowDates] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  
+  const [isPending, setIsPending] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  
+  const [isCheckingDates, setIsCheckingDates] = useState(false);
+  const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
 
   const datesSelected = startDate && endDate;
 
@@ -21,6 +29,36 @@ export function BookingWidget({ pricePerDay }: { pricePerDay: number }) {
 
   const days = useMemo(() => calculateDays(startDate, endDate), [startDate, endDate]);
   const total = pricePerDay * days;
+
+  useEffect(() => {
+    if (datesSelected) {
+      const verify = async () => {
+        setIsCheckingDates(true);
+        setIsAvailable(null);
+        setErrorMsg('');
+        const res = await checkAvailability(itemId, startDate, endDate);
+        setIsAvailable(res.available);
+        setIsCheckingDates(false);
+      };
+      verify();
+    } else {
+      setIsAvailable(null);
+    }
+  }, [startDate, endDate, itemId, datesSelected]);
+
+  const handleRentNow = async () => {
+    setIsPending(true);
+    setSuccessMsg('');
+    setErrorMsg('');
+    
+    const res = await createRequest(itemId, startDate, endDate);
+    if (res?.error) {
+      setErrorMsg(res.error);
+    } else {
+      setSuccessMsg('Request sent successfully ✅');
+    }
+    setIsPending(false);
+  };
 
   return (
     <div className="flex flex-col w-full mt-2">
@@ -59,9 +97,19 @@ export function BookingWidget({ pricePerDay }: { pricePerDay: number }) {
 
           {datesSelected ? (
             <div className="flex flex-col animate-in fade-in zoom-in-95 duration-300">
-              <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-center mb-5">
-                <p className="text-emerald-700 font-bold text-sm">✨ Available for selected dates</p>
-              </div>
+              {isCheckingDates ? (
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center mb-5 animate-pulse">
+                  <p className="text-slate-600 font-bold text-sm">Checking dates...</p>
+                </div>
+              ) : isAvailable === true ? (
+                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-center mb-5">
+                  <p className="text-emerald-700 font-bold text-sm">Available ✅</p>
+                </div>
+              ) : isAvailable === false ? (
+                <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-center mb-5">
+                  <p className="text-red-700 font-bold text-sm">Not available for selected dates ❌</p>
+                </div>
+              ) : null}
               
               <div className="flex flex-col gap-3 py-2">
                 <div className="flex justify-between items-center text-slate-600 font-medium text-[15px]">
@@ -74,11 +122,24 @@ export function BookingWidget({ pricePerDay }: { pricePerDay: number }) {
                 </div>
               </div>
 
+              {successMsg && (
+                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-center mt-2 animate-in fade-in duration-300">
+                  <p className="text-emerald-700 font-bold text-sm tracking-tight">{successMsg}</p>
+                </div>
+              )}
+              {errorMsg && (
+                <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-center mt-2 animate-in fade-in duration-300">
+                  <p className="text-red-700 font-bold text-sm">{errorMsg}</p>
+                </div>
+              )}
+
               <Button 
                 size="lg" 
-                className="w-full rounded-full text-lg h-14 font-extrabold shadow-xl shadow-emerald-500/20 transition-all bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-1 mt-4"
+                onClick={handleRentNow}
+                disabled={isPending || !!successMsg || isAvailable === false || isCheckingDates}
+                className="w-full rounded-full text-lg h-14 font-extrabold shadow-xl shadow-emerald-500/20 transition-all bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-1 mt-4 disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
               >
-                Rent Now
+                {isPending ? 'Sending Request...' : successMsg ? 'Requested' : 'Rent Now'}
               </Button>
             </div>
           ) : (

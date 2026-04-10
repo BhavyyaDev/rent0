@@ -80,7 +80,7 @@ export default async function ItemDetailPage({
               </div>
             </div>
 
-            <BookingWidget pricePerDay={item?.pricePerDay || 0} />
+            <BookingWidget itemId={item?.id || ''} pricePerDay={item?.pricePerDay || 0} />
             
             <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-center gap-2 text-slate-500 text-sm font-medium opacity-80">
               <ShieldCheck className="w-5 h-5 text-slate-400" />
