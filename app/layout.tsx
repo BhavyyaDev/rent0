@@ -42,8 +42,10 @@ export default async function RootLayout({
       globalRole = dbUser.role;
     }
 
-    // Force onboarding if role is still "onboarding" and we are not already on the onboarding page
-    if (globalRole === 'onboarding' && pathname !== '/onboarding') {
+    // Ensure we have a reliable pathname before attempting mandatory onboarding redirects
+    const isOnboardingPage = pathname.toLowerCase().includes('/onboarding');
+    
+    if (globalRole === 'onboarding' && pathname && !isOnboardingPage) {
       redirect('/onboarding');
     }
   }
