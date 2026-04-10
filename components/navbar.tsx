@@ -19,20 +19,26 @@ export function Navbar() {
             Explore
           </Link>
           {!isLoaded ? null : isSignedIn ? (
-            <>
-              <Link href="/dashboard" className="text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors mr-2">
-                Dashboard
-              </Link>
+            <div className="flex items-center gap-3">
               <Link href="/items/add">
                 <Button className="rounded-full px-5 h-10 font-bold shadow-sm hover:shadow-md transition-all bg-slate-900 text-white hover:bg-slate-800">
                   <Plus className="w-4 h-4 mr-1" strokeWidth={3} />
-                  Add Item
+                  List Item
                 </Button>
               </Link>
-              <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
-                <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+              <div className="flex items-center justify-center flex-shrink-0 ml-1">
+                <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }}>
+                  <UserButton.MenuItems>
+                    <UserButton.Link label="Dashboard" href="/dashboard" labelIcon={
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                    } />
+                    <UserButton.Link label="My Requests" href="/dashboard" labelIcon={
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    } />
+                  </UserButton.MenuItems>
+                </UserButton>
               </div>
-            </>
+            </div>
           ) : (
             <Link href="/sign-in">
               <Button variant="outline" className="rounded-full px-6 h-10 font-bold shadow-sm hover:shadow-md transition-all border-slate-200 text-slate-700 hover:bg-slate-50">

@@ -5,7 +5,7 @@ import { DashboardItemCard } from '@/components/dashboard-item-card';
 import { RequestActionButtons } from '@/components/request-action-buttons';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { PlusCircle, ShoppingBag, Package, Activity, Banknote } from 'lucide-react';
+import { PlusCircle, ShoppingBag, Package, Activity, Banknote, Search } from 'lucide-react';
 import { Item } from '@/components/item-card';
 
 export const dynamic = "force-dynamic";
@@ -64,8 +64,8 @@ export default async function DashboardPage() {
         <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <h1 className="text-[32px] md:text-[40px] font-extrabold tracking-tight text-[#222222]">My Listings</h1>
-              <p className="text-[17px] text-[#717171] mt-2 font-medium">Manage your rental inventory</p>
+              <h1 className="text-[32px] md:text-[40px] font-extrabold tracking-tight text-[#222222]">Dashboard Overview</h1>
+              <p className="text-[17px] text-[#717171] mt-2 font-medium">Your complete marketplace summary.</p>
             </div>
             
             <Link href="/items/add">
@@ -117,126 +117,161 @@ export default async function DashboardPage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 mt-12 flex flex-col gap-16">
-
-        {/* Outgoing Requests Section (Renter View) */}
-        {outgoingRequests && outgoingRequests.length > 0 && (
-          <div>
-            <h2 className="text-[22px] font-extrabold text-[#222222] mb-6">Your Rental Requests</h2>
-            <div className="bg-white rounded-[24px] border border-slate-200 overflow-hidden shadow-sm overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[700px]">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-[13px] tracking-widest text-slate-500 uppercase font-bold">
-                    <th className="p-5 font-bold">Item</th>
-                    <th className="p-5 font-bold">Owner</th>
-                    <th className="p-5 font-bold">Dates</th>
-                    <th className="p-5 font-bold">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {outgoingRequests.map((req: any) => (
-                    <tr key={req.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="p-5">
-                        <Link href={`/items/${req.item.id}`} className="font-bold text-slate-900 line-clamp-1 hover:underline text-[15px]">{req.item.title}</Link>
-                        <div className="text-[13px] font-bold text-emerald-600 mt-0.5">₹{req.item.pricePerDay}/day</div>
-                      </td>
-                      <td className="p-5">
-                        <div className="font-bold text-slate-900 text-[14px]">{req.item.owner?.name || 'Verified Owner'}</div>
-                      </td>
-                      <td className="p-5 text-slate-600 font-bold whitespace-nowrap text-[14px]">
-                        {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
-                      </td>
-                      <td className="p-5 w-60">
-                        {req.status === 'pending' && (
-                           <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm whitespace-nowrap">
-                             Waiting for owner
-                           </span>
-                        )}
-                        {req.status === 'accepted' && (
-                           <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm whitespace-nowrap">
-                             Accepted - proceed to pickup
-                           </span>
-                        )}
-                        {req.status === 'rejected' && (
-                           <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm whitespace-nowrap">
-                             Rejected
-                           </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+      <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 mt-16 flex flex-col gap-24">
         
-        {/* Incoming Requests Section (Owner View) */}
-        {incomingRequests && incomingRequests.length > 0 && (
-          <div>
-            <h2 className="text-[22px] font-extrabold text-[#222222] mb-6">Requests for Your Items</h2>
-            <div className="bg-white rounded-[24px] border border-slate-200 overflow-hidden shadow-sm overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[700px]">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-[13px] tracking-widest text-slate-500 uppercase font-bold">
-                    <th className="p-5 font-bold">Item</th>
-                    <th className="p-5 font-bold">Renter</th>
-                    <th className="p-5 font-bold">Dates</th>
-                    <th className="p-5 font-bold">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {incomingRequests.map((req: any) => (
-                    <tr key={req.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="p-5">
-                        <div className="font-bold text-slate-900 line-clamp-1">{req.item.title}</div>
-                        <div className="text-sm font-medium text-emerald-600">${req.item.pricePerDay}/day</div>
-                      </td>
-                      <td className="p-5">
-                        <div className="font-bold text-slate-900">{req.renter.name || 'Anonymous User'}</div>
-                        <div className="text-sm font-medium text-slate-500">{req.renter.email}</div>
-                      </td>
-                      <td className="p-5 text-slate-600 font-bold whitespace-nowrap text-sm">
-                        {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
-                      </td>
-                      <td className="p-5 w-40">
-                        <RequestActionButtons requestId={req.id} status={req.status} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+        {/* --- LENDER VIEW (OWNER ROLE) --- */}
+        <section className="flex flex-col gap-10">
+          <div className="border-b border-slate-200 pb-5">
+             <h2 className="text-[28px] font-extrabold text-[#222222]">Lender Dashboard</h2>
+             <p className="text-[#717171] font-medium mt-1">Manage your inventory and fulfill incoming rental requests.</p>
           </div>
-        )}
 
-        {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-[40px] border border-slate-100 shadow-sm mt-6">
-            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-              <ShoppingBag className="w-12 h-12 text-slate-300" />
+          {/* Incoming Requests Section */}
+          {incomingRequests && incomingRequests.length > 0 && (
+            <div>
+              <h3 className="text-[20px] font-extrabold text-[#222222] mb-5">Incoming Bookings</h3>
+              <div className="bg-white rounded-[24px] border border-slate-200 overflow-hidden shadow-sm overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[700px]">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-[13px] tracking-widest text-slate-500 uppercase font-bold">
+                      <th className="p-5 font-bold">Item</th>
+                      <th className="p-5 font-bold">Renter</th>
+                      <th className="p-5 font-bold">Dates</th>
+                      <th className="p-5 font-bold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {incomingRequests.map((req: any) => (
+                      <tr key={req.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-5">
+                          <div className="font-bold text-slate-900 line-clamp-1">{req.item.title}</div>
+                          <div className="text-sm font-medium text-emerald-600">₹{req.item.pricePerDay}/day</div>
+                        </td>
+                        <td className="p-5">
+                          <div className="font-bold text-slate-900">{req.renter.name || 'Verified Renter'}</div>
+                          <div className="text-sm font-medium text-slate-500">{req.renter.email}</div>
+                        </td>
+                        <td className="p-5 text-slate-600 font-bold whitespace-nowrap text-sm">
+                          {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
+                        </td>
+                        <td className="p-5 w-40">
+                          <RequestActionButtons requestId={req.id} status={req.status} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <h3 className="text-[26px] font-extrabold text-[#222222] mb-3">
-              You haven't listed anything yet
-            </h3>
-            <p className="text-[17px] text-[#717171] max-w-sm mx-auto mb-10 font-medium leading-relaxed">
-              Start earning by listing items you don't use every day. Your gear could be making someone else's project possible.
-            </p>
-            <Link href="/items/add">
-              <Button className="rounded-full h-14 px-10 text-lg font-bold shadow-xl shadow-slate-200 transition-all active:scale-95 bg-slate-900 text-white hover:bg-slate-800">
-                List your first item
-              </Button>
-            </Link>
-          </div>
-        ) : (
-           <div>
-             <h2 className="text-[22px] font-extrabold text-[#222222] mb-8">Your Inventory</h2>
-             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-8 gap-y-12">
-               {items.map((item) => (
-                 <DashboardItemCard key={item.id} item={item} />
-               ))}
+          )}
+
+          {/* User Inventory Grid */}
+          {items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-[40px] border border-slate-100 shadow-sm mt-2">
+              <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+                <ShoppingBag className="w-12 h-12 text-slate-300" />
+              </div>
+              <h3 className="text-[26px] font-extrabold text-[#222222] mb-3">
+                You haven't listed anything yet
+              </h3>
+              <p className="text-[17px] text-[#717171] max-w-sm mx-auto mb-10 font-medium leading-relaxed">
+                Start earning by listing items you don't use every day. Your gear could be making someone else's project possible.
+              </p>
+              <Link href="/items/add">
+                <Button className="rounded-full h-14 px-10 text-lg font-bold shadow-xl shadow-slate-200 transition-all active:scale-95 bg-slate-900 text-white hover:bg-slate-800">
+                  List your first item
+                </Button>
+              </Link>
+            </div>
+          ) : (
+             <div>
+               <h3 className="text-[20px] font-extrabold text-[#222222] mb-6">Your Inventory</h3>
+               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-8 gap-y-12">
+                 {items.map((item) => (
+                   <DashboardItemCard key={item.id} item={item} />
+                 ))}
+               </div>
              </div>
-           </div>
-        )}
+          )}
+        </section>
+
+
+        {/* --- RENTER VIEW (CUSTOMER ROLE) --- */}
+        <section className="flex flex-col gap-10">
+          <div className="border-b border-slate-200 pb-5">
+             <h2 className="text-[28px] font-extrabold text-[#222222]">Renter Dashboard</h2>
+             <p className="text-[#717171] font-medium mt-1">Track the status of gear you want to rent from others.</p>
+          </div>
+
+          {outgoingRequests && outgoingRequests.length > 0 ? (
+            <div>
+              <h3 className="text-[20px] font-extrabold text-[#222222] mb-5">Your Rental Requests</h3>
+              <div className="bg-white rounded-[24px] border border-slate-200 overflow-hidden shadow-sm overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[700px]">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-[13px] tracking-widest text-slate-500 uppercase font-bold">
+                      <th className="p-5 font-bold">Item</th>
+                      <th className="p-5 font-bold">Owner</th>
+                      <th className="p-5 font-bold">Dates</th>
+                      <th className="p-5 font-bold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {outgoingRequests.map((req: any) => (
+                      <tr key={req.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-5">
+                          <Link href={`/items/${req.item.id}`} className="font-bold text-slate-900 line-clamp-1 hover:underline text-[15px]">{req.item.title}</Link>
+                          <div className="text-[13px] font-bold text-emerald-600 mt-0.5">₹{req.item.pricePerDay}/day</div>
+                        </td>
+                        <td className="p-5">
+                          <div className="font-bold text-slate-900 text-[14px]">{req.item.owner?.name || 'Verified Owner'}</div>
+                        </td>
+                        <td className="p-5 text-slate-600 font-bold whitespace-nowrap text-[14px]">
+                          {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
+                        </td>
+                        <td className="p-5 w-60">
+                          {req.status === 'pending' && (
+                             <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm whitespace-nowrap">
+                               Waiting for owner
+                             </span>
+                          )}
+                          {req.status === 'accepted' && (
+                             <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm whitespace-nowrap">
+                               Accepted - proceed to pickup
+                             </span>
+                          )}
+                          {req.status === 'rejected' && (
+                             <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm whitespace-nowrap">
+                               Rejected
+                             </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-[40px] border border-slate-100 shadow-sm mt-2">
+              <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+                <Search className="w-10 h-10 text-blue-300" />
+              </div>
+              <h3 className="text-[26px] font-extrabold text-[#222222] mb-3">
+                No rental requests yet
+              </h3>
+              <p className="text-[17px] text-[#717171] max-w-sm mx-auto mb-10 font-medium leading-relaxed">
+                Explore items and make your first rental.
+              </p>
+              <Link href="/explore">
+                <Button className="rounded-full h-14 px-10 text-lg font-bold shadow-xl shadow-blue-200 transition-all active:scale-95 bg-blue-600 text-white hover:bg-blue-700">
+                  Go to Explore
+                </Button>
+              </Link>
+            </div>
+          )}
+        </section>
+
       </div>
     </div>
   );

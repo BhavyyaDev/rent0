@@ -4,8 +4,13 @@ import { useState, useMemo, useEffect } from 'react';
 import { Button } from './ui/button';
 import { createRequest, checkAvailability } from '@/app/actions/request';
 import { Loader2 } from 'lucide-react';
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 
 export function BookingWidget({ itemId, pricePerDay }: { itemId: string, pricePerDay: number }) {
+  const { isSignedIn, isLoaded } = useUser();
+  const router = useRouter();
+  
   const [showDates, setShowDates] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -48,6 +53,15 @@ export function BookingWidget({ itemId, pricePerDay }: { itemId: string, pricePe
   }, [startDate, endDate, itemId, datesSelected]);
 
   const handleRentNow = async () => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      setErrorMsg('Please sign in to continue');
+      setTimeout(() => {
+        router.push('/sign-in');
+      }, 1200);
+      return;
+    }
+
     setIsPending(true);
     setSuccessMsg('');
     setErrorMsg('');
@@ -138,10 +152,10 @@ export function BookingWidget({ itemId, pricePerDay }: { itemId: string, pricePe
               <Button 
                 size="lg" 
                 onClick={handleRentNow}
-                disabled={isPending || !!successMsg || isAvailable === false || isCheckingDates}
+                disabled={isPending || !!successMsg || isAvailable === false || isCheckingDates || !isLoaded}
                 className="w-full rounded-full text-lg h-14 font-extrabold shadow-xl shadow-emerald-500/20 transition-all bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-1 mt-4 disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
               >
-                {isPending ? (
+                {!isLoaded ? 'Loading...' : !isSignedIn ? 'Sign in to Rent' : isPending ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="w-5 h-5 animate-spin" />
                     Sending Request...
