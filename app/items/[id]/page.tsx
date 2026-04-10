@@ -74,9 +74,16 @@ export default async function ItemDetailPage({
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-slate-900 text-lg leading-tight">{item?.owner?.name || 'Unknown User'}</span>
-                <span className="text-sm font-medium text-emerald-600 mt-0.5 flex items-center gap-1">
-                  <ShieldCheck className="w-4 h-4" /> Verified Owner
-                </span>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-sm font-bold text-emerald-600 flex items-center gap-1">
+                    <ShieldCheck className="w-4 h-4" /> Verified Owner
+                  </span>
+                  {(item?.owner?.trustScore ?? 0) > 0 && (
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded shadow-sm">
+                      Trust {item.owner!.trustScore}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 

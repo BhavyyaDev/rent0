@@ -43,6 +43,15 @@ export default async function DashboardPage() {
     },
   });
 
+  // Fetch outgoing rental requests made by this user (Renter View)
+  const outgoingRequests = await (prisma as any).request.findMany({
+    where: { renterId: userId },
+    include: { 
+      item: { include: { owner: true } }
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
   const totalListings = items.length;
   const activeListings = items.length;
   // Estimated mock value calculation
@@ -109,8 +118,60 @@ export default async function DashboardPage() {
 
       {/* Main Content Area */}
       <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 mt-12 flex flex-col gap-16">
+
+        {/* Outgoing Requests Section (Renter View) */}
+        {outgoingRequests && outgoingRequests.length > 0 && (
+          <div>
+            <h2 className="text-[22px] font-extrabold text-[#222222] mb-6">Your Rental Requests</h2>
+            <div className="bg-white rounded-[24px] border border-slate-200 overflow-hidden shadow-sm overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[700px]">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-[13px] tracking-widest text-slate-500 uppercase font-bold">
+                    <th className="p-5 font-bold">Item</th>
+                    <th className="p-5 font-bold">Owner</th>
+                    <th className="p-5 font-bold">Dates</th>
+                    <th className="p-5 font-bold">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {outgoingRequests.map((req: any) => (
+                    <tr key={req.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="p-5">
+                        <Link href={`/items/${req.item.id}`} className="font-bold text-slate-900 line-clamp-1 hover:underline text-[15px]">{req.item.title}</Link>
+                        <div className="text-[13px] font-bold text-emerald-600 mt-0.5">₹{req.item.pricePerDay}/day</div>
+                      </td>
+                      <td className="p-5">
+                        <div className="font-bold text-slate-900 text-[14px]">{req.item.owner?.name || 'Verified Owner'}</div>
+                      </td>
+                      <td className="p-5 text-slate-600 font-bold whitespace-nowrap text-[14px]">
+                        {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
+                      </td>
+                      <td className="p-5 w-60">
+                        {req.status === 'pending' && (
+                           <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm whitespace-nowrap">
+                             Waiting for owner
+                           </span>
+                        )}
+                        {req.status === 'accepted' && (
+                           <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm whitespace-nowrap">
+                             Accepted - proceed to pickup
+                           </span>
+                        )}
+                        {req.status === 'rejected' && (
+                           <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm whitespace-nowrap">
+                             Rejected
+                           </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
         
-        {/* Incoming Requests Section */}
+        {/* Incoming Requests Section (Owner View) */}
         {incomingRequests && incomingRequests.length > 0 && (
           <div>
             <h2 className="text-[22px] font-extrabold text-[#222222] mb-6">Requests for Your Items</h2>

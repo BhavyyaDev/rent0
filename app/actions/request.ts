@@ -6,11 +6,11 @@ import { prisma } from '@/lib/db';
 export async function createRequest(itemId: string, startDate: string | Date, endDate: string | Date) {
   const user = await currentUser();
   if (!user) {
-    return { error: 'You must be logged in to create a rental request.' };
+    return { error: 'Please sign in to book your rental request.' };
   }
 
   if (!itemId || !startDate || !endDate) {
-    return { error: 'Invalid input. Missing fields.' };
+    return { error: 'Please select both a check-in and checkout date.' };
   }
 
   try {
@@ -28,7 +28,7 @@ export async function createRequest(itemId: string, startDate: string | Date, en
     });
 
     if (overlappingRequests.length > 0) {
-      return { error: 'Item not available for selected dates' };
+      return { error: 'Oh no! Looks like those dates were just booked by someone else.' };
     }
 
     const request = await (prisma as any).request.create({
@@ -45,7 +45,7 @@ export async function createRequest(itemId: string, startDate: string | Date, en
     return { success: true, requestId: request.id };
   } catch (error) {
     console.error(`[Request Action] Failed to create rental request:`, error);
-    return { error: 'Something went wrong while submitting your request.' };
+    return { error: 'Oops! Something went wrong. Please try your request again.' };
   }
 }
 
@@ -54,7 +54,7 @@ import { revalidatePath } from 'next/cache';
 export async function updateRequestStatus(requestId: string, status: string) {
   const user = await currentUser();
   if (!user) {
-    return { error: 'You must be logged in to update requests.' };
+    return { error: 'Please sign in to update this request.' };
   }
 
   try {
@@ -64,7 +64,7 @@ export async function updateRequestStatus(requestId: string, status: string) {
     });
 
     if (!existingRequest || existingRequest.item.ownerId !== user.id) {
-       return { error: 'Unauthorized to update this request.' };
+       return { error: 'Hmm, you do not seem to have permission to do that.' };
     }
 
     await (prisma as any).request.update({
@@ -76,7 +76,7 @@ export async function updateRequestStatus(requestId: string, status: string) {
     return { success: true };
   } catch (error) {
     console.error(`[Request Action] Failed to update request status:`, error);
-    return { error: 'Something went wrong while updating the request.' };
+    return { error: 'Oops! We hit an error updating this. Please try again.' };
   }
 }
 
@@ -97,6 +97,6 @@ export async function checkAvailability(itemId: string, startDate: string | Date
     return { available: overlappingRequests.length === 0 };
   } catch (error) {
     console.error(`[Request Action] Failed to check availability:`, error);
-    return { available: false, error: 'Failed to verify availability' };
+    return { available: false, error: 'Hmm, we had trouble checking those dates. Please try again.' };
   }
 }

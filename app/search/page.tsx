@@ -46,6 +46,19 @@ export default async function SearchPage(props: { searchParams: Promise<{ [key: 
     orderBy: { createdAt: 'desc' },
   });
 
+  const parsedStart = startDate ? new Date(startDate) : undefined;
+  const parsedEnd = endDate ? new Date(endDate) : undefined;
+
+  const processedItems = items.map((item: any) => {
+    let conflict = false;
+    if (dateFilterActive && parsedStart && parsedEnd) {
+      conflict = item.requests?.some((req: any) => {
+        return new Date(req.startDate) <= parsedEnd && new Date(req.endDate) >= parsedStart;
+      });
+    }
+    return { ...item, hasBookingConflict: conflict };
+  });
+
   return (
     <div className="w-full min-h-[calc(100vh-4rem)] bg-[#F8FAFC]">
       <div className="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 py-10 pt-16">
@@ -88,7 +101,7 @@ export default async function SearchPage(props: { searchParams: Promise<{ [key: 
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-8 gap-y-14 mb-20">
-              {items.map((item: any) => (
+              {processedItems.map((item: any) => (
                 <ItemCard key={item.id} item={item} dateFilterActive={dateFilterActive} />
               ))}
             </div>
