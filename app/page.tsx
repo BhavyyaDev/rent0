@@ -69,13 +69,13 @@ export default function Home() {
         <div className="container mx-auto px-6 md:px-10 lg:px-20">
           <div className="flex items-center justify-between mb-12">
             <h2 className="text-3xl font-extrabold text-slate-900">Browse by Category</h2>
-            <Link href="/explore" className="flex items-center gap-2 text-emerald-600 font-bold hover:gap-3 transition-all">
+            <Link href="/search" className="flex items-center gap-2 text-emerald-600 font-bold hover:gap-3 transition-all">
               View all <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {categories.map((cat) => (
-              <Link key={cat.name} href={`/explore?category=${cat.name.toLowerCase()}`}>
+              <Link key={cat.name} href={`/search?category=${cat.name.toLowerCase()}`}>
                 <div className="group bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
                   <div className={`w-14 h-14 ${cat.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
                     <cat.icon className="w-7 h-7" />
@@ -144,7 +144,7 @@ export default function Home() {
               Join thousands of creators who use RentO to access the equipment they need, when they need it.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-              <Link href="/explore">
+              <Link href="/search">
                 <Button className="rounded-full h-16 px-10 bg-emerald-500 hover:bg-emerald-600 text-slate-900 text-lg font-bold shadow-lg shadow-emerald-500/20">
                   Start Exploring
                 </Button>

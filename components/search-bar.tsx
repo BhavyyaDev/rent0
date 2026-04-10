@@ -50,7 +50,14 @@ export function SearchBar() {
       }
       
       if (changed) {
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        // Automatically route users executing global searches to the unified /search endpoint
+        const targetPath = pathname === '/' ? '/search' : pathname.replace('/explore', '/search');
+        
+        if (pathname === '/') {
+           router.push(`${targetPath}?${params.toString()}`, { scroll: false });
+        } else {
+           router.replace(`${targetPath}?${params.toString()}`, { scroll: false });
+        }
       }
     }, 450);
 

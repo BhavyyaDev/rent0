@@ -100,3 +100,35 @@ export async function checkAvailability(itemId: string, startDate: string | Date
     return { available: false, error: 'Hmm, we had trouble checking those dates. Please try again.' };
   }
 }
+
+export async function deleteRequest(requestId: string) {
+  const user = await currentUser();
+  if (!user) {
+    return { error: 'Please sign in to modify requests.' };
+  }
+
+  try {
+    const existingRequest = await (prisma as any).request.findUnique({
+      where: { id: requestId }
+    });
+
+    if (!existingRequest || existingRequest.renterId !== user.id) {
+       return { error: 'Hmm, you do not seem to have permission to do that.' };
+    }
+
+    if (existingRequest.status !== 'pending') {
+       return { error: 'You can only cancel pending requests. If already accepted, please contact the owner.' };
+    }
+
+    await (prisma as any).request.delete({
+      where: { id: requestId }
+    });
+
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error) {
+    console.error(`[Request Action] Failed to delete request:`, error);
+    return { error: 'Oops! We hit an error deleting this. Please try again.' };
+  }
+}
+

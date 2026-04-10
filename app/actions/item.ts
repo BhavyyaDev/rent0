@@ -37,7 +37,7 @@ export async function createItem(prevState: any, formData: FormData) {
     console.log(`[Item Action] Item created in DB:`, item.id);
 
     revalidatePath('/');
-    revalidatePath('/explore');
+    revalidatePath('/search');
     return { success: true, itemId: item.id };
   } catch (error) {
     console.error(`[Item Action] Failed to create item:`, error);
@@ -83,7 +83,7 @@ export async function updateItem(itemId: string, prevState: any, formData: FormD
     });
 
     revalidatePath('/');
-    revalidatePath('/explore');
+    revalidatePath('/search');
     revalidatePath(`/items/${itemId}`);
     revalidatePath('/dashboard');
     return { success: true, itemId: updatedItem.id };
@@ -114,7 +114,7 @@ export async function deleteItem(itemId: string) {
     });
 
     revalidatePath('/');
-    revalidatePath('/explore');
+    revalidatePath('/search');
     revalidatePath('/dashboard');
     return { success: true };
   } catch (error) {

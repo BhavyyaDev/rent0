@@ -5,8 +5,10 @@ import { DashboardItemCard } from '@/components/dashboard-item-card';
 import { RequestActionButtons } from '@/components/request-action-buttons';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { PlusCircle, ShoppingBag, Package, Activity, Banknote, Search } from 'lucide-react';
+import { PlusCircle, ShoppingBag, Package, Activity, Banknote, Search, XCircle } from 'lucide-react';
 import { Item } from '@/components/item-card';
+import { RoleToggle } from '@/components/role-toggle';
+import { deleteRequest } from '@/app/actions/request';
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +18,10 @@ export default async function DashboardPage() {
   if (!userId) {
     redirect('/sign-in');
   }
+
+  // Get global user details and read Postgres role string
+  const currentUser = await (prisma as any).user.findUnique({ where: { id: userId } });
+  const role = currentUser?.role || 'renter';
 
   // Fetch items owned by the current user
   const rawItems = await prisma.item.findMany({
@@ -68,11 +74,17 @@ export default async function DashboardPage() {
               <p className="text-[17px] text-[#717171] mt-2 font-medium">Your complete marketplace summary.</p>
             </div>
             
-            <Link href="/items/add">
-              <Button className="rounded-full h-12 px-7 text-base font-bold shadow-md hover:shadow-lg transition-all gap-2 bg-slate-900 hover:bg-slate-800 text-white active:scale-95">
-                <PlusCircle className="w-5 h-5" /> Add New Item
-              </Button>
-            </Link>
+            <div className="flex items-center gap-3">
+              <RoleToggle currentRole={role} />
+              
+              {role === 'lender' && (
+                <Link href="/items/add">
+                  <Button className="rounded-full h-12 px-7 text-base font-bold shadow-md hover:shadow-lg transition-all gap-2 bg-slate-900 hover:bg-slate-800 text-white active:scale-95">
+                    <PlusCircle className="w-5 h-5" /> Add New Item
+                  </Button>
+                </Link>
+              )}
+            </div>
           </div>
 
           {/* Stats Section */}
@@ -120,83 +132,86 @@ export default async function DashboardPage() {
       <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 mt-16 flex flex-col gap-24">
         
         {/* --- LENDER VIEW (OWNER ROLE) --- */}
-        <section className="flex flex-col gap-10">
-          <div className="border-b border-slate-200 pb-5">
-             <h2 className="text-[28px] font-extrabold text-[#222222]">Lender Dashboard</h2>
-             <p className="text-[#717171] font-medium mt-1">Manage your inventory and fulfill incoming rental requests.</p>
-          </div>
-
-          {/* Incoming Requests Section */}
-          {incomingRequests && incomingRequests.length > 0 && (
-            <div>
-              <h3 className="text-[20px] font-extrabold text-[#222222] mb-5">Incoming Bookings</h3>
-              <div className="bg-white rounded-[24px] border border-slate-200 overflow-hidden shadow-sm overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[700px]">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 text-[13px] tracking-widest text-slate-500 uppercase font-bold">
-                      <th className="p-5 font-bold">Item</th>
-                      <th className="p-5 font-bold">Renter</th>
-                      <th className="p-5 font-bold">Dates</th>
-                      <th className="p-5 font-bold">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {incomingRequests.map((req: any) => (
-                      <tr key={req.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="p-5">
-                          <div className="font-bold text-slate-900 line-clamp-1">{req.item.title}</div>
-                          <div className="text-sm font-medium text-emerald-600">₹{req.item.pricePerDay}/day</div>
-                        </td>
-                        <td className="p-5">
-                          <div className="font-bold text-slate-900">{req.renter.name || 'Verified Renter'}</div>
-                          <div className="text-sm font-medium text-slate-500">{req.renter.email}</div>
-                        </td>
-                        <td className="p-5 text-slate-600 font-bold whitespace-nowrap text-sm">
-                          {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
-                        </td>
-                        <td className="p-5 w-40">
-                          <RequestActionButtons requestId={req.id} status={req.status} />
-                        </td>
+        {role === 'lender' && (
+          <section className="flex flex-col gap-10">
+            <div className="border-b border-slate-200 pb-5">
+               <h2 className="text-[28px] font-extrabold text-[#222222]">Lender Dashboard</h2>
+               <p className="text-[#717171] font-medium mt-1">Manage your inventory and fulfill incoming rental requests.</p>
+            </div>
+  
+            {/* Incoming Requests Section */}
+            {incomingRequests && incomingRequests.length > 0 && (
+              <div>
+                <h3 className="text-[20px] font-extrabold text-[#222222] mb-5">Incoming Bookings</h3>
+                <div className="bg-white rounded-[24px] border border-slate-200 overflow-hidden shadow-sm overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[700px]">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-[13px] tracking-widest text-slate-500 uppercase font-bold">
+                        <th className="p-5 font-bold">Item</th>
+                        <th className="p-5 font-bold">Renter</th>
+                        <th className="p-5 font-bold">Dates</th>
+                        <th className="p-5 font-bold">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {incomingRequests.map((req: any) => (
+                        <tr key={req.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="p-5">
+                            <div className="font-bold text-slate-900 line-clamp-1">{req.item.title}</div>
+                            <div className="text-sm font-medium text-emerald-600">₹{req.item.pricePerDay}/day</div>
+                          </td>
+                          <td className="p-5">
+                            <div className="font-bold text-slate-900">{req.renter.name || 'Verified Renter'}</div>
+                            <div className="text-sm font-medium text-slate-500">{req.renter.email}</div>
+                          </td>
+                          <td className="p-5 text-slate-600 font-bold whitespace-nowrap text-sm">
+                            {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
+                          </td>
+                          <td className="p-5 w-40">
+                            <RequestActionButtons requestId={req.id} status={req.status} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          )}
-
-          {/* User Inventory Grid */}
-          {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-[40px] border border-slate-100 shadow-sm mt-2">
-              <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-                <ShoppingBag className="w-12 h-12 text-slate-300" />
+            )}
+  
+            {/* User Inventory Grid */}
+            {items.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-[40px] border border-slate-100 shadow-sm mt-2">
+                <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+                  <ShoppingBag className="w-12 h-12 text-slate-300" />
+                </div>
+                <h3 className="text-[26px] font-extrabold text-[#222222] mb-3">
+                  You haven't listed anything yet
+                </h3>
+                <p className="text-[17px] text-[#717171] max-w-sm mx-auto mb-10 font-medium leading-relaxed">
+                  Start earning by listing items you don't use every day. Your gear could be making someone else's project possible.
+                </p>
+                <Link href="/items/add">
+                  <Button className="rounded-full h-14 px-10 text-lg font-bold shadow-xl shadow-slate-200 transition-all active:scale-95 bg-slate-900 text-white hover:bg-slate-800">
+                    List your first item
+                  </Button>
+                </Link>
               </div>
-              <h3 className="text-[26px] font-extrabold text-[#222222] mb-3">
-                You haven't listed anything yet
-              </h3>
-              <p className="text-[17px] text-[#717171] max-w-sm mx-auto mb-10 font-medium leading-relaxed">
-                Start earning by listing items you don't use every day. Your gear could be making someone else's project possible.
-              </p>
-              <Link href="/items/add">
-                <Button className="rounded-full h-14 px-10 text-lg font-bold shadow-xl shadow-slate-200 transition-all active:scale-95 bg-slate-900 text-white hover:bg-slate-800">
-                  List your first item
-                </Button>
-              </Link>
-            </div>
-          ) : (
-             <div>
-               <h3 className="text-[20px] font-extrabold text-[#222222] mb-6">Your Inventory</h3>
-               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-8 gap-y-12">
-                 {items.map((item) => (
-                   <DashboardItemCard key={item.id} item={item} />
-                 ))}
+            ) : (
+               <div>
+                 <h3 className="text-[20px] font-extrabold text-[#222222] mb-6">Your Inventory</h3>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-8 gap-y-12">
+                   {items.map((item) => (
+                     <DashboardItemCard key={item.id} item={item} />
+                   ))}
+                 </div>
                </div>
-             </div>
-          )}
-        </section>
+            )}
+          </section>
+        )}
 
 
         {/* --- RENTER VIEW (CUSTOMER ROLE) --- */}
+        {role === 'renter' && (
         <section className="flex flex-col gap-10">
           <div className="border-b border-slate-200 pb-5">
              <h2 className="text-[28px] font-extrabold text-[#222222]">Renter Dashboard</h2>
@@ -230,21 +245,35 @@ export default async function DashboardPage() {
                           {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
                         </td>
                         <td className="p-5 w-60">
-                          {req.status === 'pending' && (
-                             <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm whitespace-nowrap">
-                               Waiting for owner
-                             </span>
-                          )}
-                          {req.status === 'accepted' && (
-                             <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm whitespace-nowrap">
-                               Accepted - proceed to pickup
-                             </span>
-                          )}
-                          {req.status === 'rejected' && (
-                             <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm whitespace-nowrap">
-                               Rejected
-                             </span>
-                          )}
+                          <div className="flex items-center gap-3">
+                            {req.status === 'pending' && (
+                               <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm whitespace-nowrap">
+                                 Waiting for owner
+                               </span>
+                            )}
+                            {req.status === 'accepted' && (
+                               <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm whitespace-nowrap">
+                                 Accepted - proceed to pickup
+                               </span>
+                            )}
+                            {req.status === 'rejected' && (
+                               <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm whitespace-nowrap">
+                                 Rejected
+                               </span>
+                            )}
+  
+                            {/* Cancellation Button Logic */}
+                            {req.status === 'pending' && (
+                              <form action={async () => {
+                                "use server";
+                                await deleteRequest(req.id);
+                              }}>
+                                <button type="submit" className="text-slate-400 hover:text-red-500 transition-colors p-1" title="Cancel Request">
+                                  <XCircle className="w-5 h-5" />
+                                </button>
+                              </form>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -263,7 +292,7 @@ export default async function DashboardPage() {
               <p className="text-[17px] text-[#717171] max-w-sm mx-auto mb-10 font-medium leading-relaxed">
                 Explore items and make your first rental.
               </p>
-              <Link href="/explore">
+              <Link href="/search">
                 <Button className="rounded-full h-14 px-10 text-lg font-bold shadow-xl shadow-blue-200 transition-all active:scale-95 bg-blue-600 text-white hover:bg-blue-700">
                   Go to Explore
                 </Button>
@@ -271,6 +300,7 @@ export default async function DashboardPage() {
             </div>
           )}
         </section>
+        )}
 
       </div>
     </div>
