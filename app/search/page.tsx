@@ -24,7 +24,9 @@ export default async function SearchPage(props: { searchParams?: Promise<{ [key:
     categoryFilter = searchParams.category || '';
     q = String(searchParams.q || '').trim();
     const sort = searchParams.sort || 'newest';
-    
+    const startDate = searchParams.startDate;
+    const endDate = searchParams.endDate;
+
     // Use safe parsing for numeric filters
     const minPriceStr = searchParams.minPrice;
     const maxPriceStr = searchParams.maxPrice;
@@ -46,6 +48,19 @@ export default async function SearchPage(props: { searchParams?: Promise<{ [key:
     
     if (categoryFilter && categoryFilter !== 'all') {
       conditions.push({ category: categoryFilter });
+    }
+
+    // NEW: Date-based availability filtering
+    if (startDate && endDate) {
+      conditions.push({
+        requests: {
+          none: {
+            status: 'accepted',
+            startDate: { lte: new Date(endDate) },
+            endDate: { gte: new Date(startDate) }
+          }
+        }
+      });
     }
 
     if (typeof minPrice === 'number' && !isNaN(minPrice)) {

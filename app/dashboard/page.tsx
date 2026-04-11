@@ -28,7 +28,15 @@ export default async function DashboardPage() {
   // Fetch items owned by the current user
   const rawItems = await prisma.item.findMany({
     where: { ownerId: userId },
-    include: { owner: true },
+    include: { 
+      owner: true,
+      requests: {
+        where: {
+          status: 'accepted',
+          endDate: { gte: new Date() }
+        }
+      }
+    },
     orderBy: { createdAt: 'desc' },
   });
 
