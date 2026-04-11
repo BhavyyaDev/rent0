@@ -98,7 +98,7 @@ export default function AddItemPage() {
                     required
                     className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl h-14 px-4 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none cursor-pointer"
                   >
-                    <option value="" disabled selected>Select a category</option>
+                    <option value="" disabled >Select a category</option>
                     <option value="camera">Camera</option>
                     <option value="audio">Audio</option>
                     <option value="gaming">Gaming</option>

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, ShieldCheck, Camera } from 'lucide-react';
 import { prisma } from '@/lib/db';
 import { BookingWidget } from '@/components/booking-widget';
+import { syncRequestStatuses } from '@/app/actions/request';
 
 export const dynamic = "force-dynamic";
 
@@ -14,11 +15,32 @@ export default async function ItemDetailPage({
 }) {
   const { id } = await params;
 
+  // Sync statuses to ensure availability is accurate (lazy sync)
+  await syncRequestStatuses();
+
   // Fetch the item from the database
   const item = await prisma.item.findUnique({
     where: { id },
     include: { owner: true }
   });
+
+  // Fetch all accepted requests for this item to show unavailable dates
+  const acceptedRequests = await (prisma as any).request.findMany({
+    where: {
+      itemId: id,
+      status: 'accepted'
+    },
+    select: {
+      startDate: true,
+      endDate: true
+    }
+  });
+
+  // Safely map dates for the frontend
+  const bookedRanges = acceptedRequests.map((req: any) => ({
+    from: req.startDate.toISOString(),
+    to: req.endDate.toISOString()
+  }));
 
   if (!item) {
     notFound();
@@ -87,7 +109,11 @@ export default async function ItemDetailPage({
               </div>
             </div>
 
-            <BookingWidget itemId={item?.id || ''} pricePerDay={item?.pricePerDay || 0} />
+            <BookingWidget 
+              itemId={item?.id || ''} 
+              pricePerDay={item?.pricePerDay || 0} 
+              bookedRanges={bookedRanges}
+            />
             
             <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-center gap-2 text-slate-500 text-sm font-medium opacity-80">
               <ShieldCheck className="w-5 h-5 text-slate-400" />

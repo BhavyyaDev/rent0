@@ -22,10 +22,18 @@ function CategoryList() {
     <div className="flex overflow-x-auto gap-3 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar scroll-smooth">
       {CATEGORIES.map((cat) => {
         const isSelected = currentCategory === cat.value;
+        const currentParams = new URLSearchParams(searchParams.toString());
+        
+        if (cat.value && cat.value !== 'all') {
+          currentParams.set('category', cat.value);
+        } else {
+          currentParams.delete('category');
+        }
+
         return (
           <Link
             key={cat.name}
-            href={cat.value ? `/search?category=${cat.value}` : '/search'}
+            href={`/search?${currentParams.toString()}`}
             className={`flex-shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-full border shadow-sm font-semibold transition-all active:scale-95 duration-200 outline-none ${
               isSelected
                 ? 'bg-slate-900 border-slate-900 text-white shadow-md'

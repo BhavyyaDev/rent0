@@ -16,6 +16,12 @@ export async function createRequest(itemId: string, startDate: string | Date, en
   try {
     const parsedStart = new Date(startDate);
     const parsedEnd = new Date(endDate);
+    const now = new Date();
+
+    // Backend validation: Start must be before end, and start cannot be in the past
+    if (parsedStart >= parsedEnd || parsedStart < new Date(now.setMinutes(now.getMinutes() - 5))) {
+      return { error: 'Invalid date selection' };
+    }
 
     // Prevent double booking overlapping reservations
     const overlappingRequests = await (prisma as any).request.findMany({
@@ -28,7 +34,7 @@ export async function createRequest(itemId: string, startDate: string | Date, en
     });
 
     if (overlappingRequests.length > 0) {
-      return { error: 'Oh no! Looks like those dates were just booked by someone else.' };
+      return { error: 'Item not available for selected dates' };
     }
 
     const request = await (prisma as any).request.create({
@@ -65,6 +71,23 @@ export async function updateRequestStatus(requestId: string, status: string) {
 
     if (!existingRequest || existingRequest.item.ownerId !== user.id) {
        return { error: 'Hmm, you do not seem to have permission to do that.' };
+    }
+
+    // NEW: If accepting, check for date conflicts first
+    if (status === 'accepted') {
+      const overlappingRequests = await (prisma as any).request.findMany({
+        where: {
+          itemId: existingRequest.itemId,
+          status: 'accepted',
+          id: { not: requestId }, // Don't count the current request itself
+          startDate: { lte: existingRequest.endDate },
+          endDate: { gte: existingRequest.startDate },
+        },
+      });
+
+      if (overlappingRequests.length > 0) {
+        return { error: 'Item not available for selected dates' };
+      }
     }
 
     await (prisma as any).request.update({
@@ -132,3 +155,108 @@ export async function deleteRequest(requestId: string) {
   }
 }
 
+export async function updateRequestDates(requestId: string, startDate: string | Date, endDate: string | Date) {
+  const user = await currentUser();
+  if (!user) {
+    return { error: 'Please sign in to modify requests.' };
+  }
+
+  try {
+    const existingRequest = await (prisma as any).request.findUnique({
+      where: { id: requestId }
+    });
+
+    if (!existingRequest || existingRequest.renterId !== user.id) {
+       return { error: 'Hmm, you do not seem to have permission to do that.' };
+    }
+
+    if (existingRequest.status !== 'pending') {
+       return { error: 'You can only edit pending requests.' };
+    }
+
+    const parsedStart = new Date(startDate);
+    const parsedEnd = new Date(endDate);
+    const now = new Date();
+
+    // Backend validation: Start must be before end, and start cannot be in the past
+    if (parsedStart >= parsedEnd || parsedStart < new Date(now.setMinutes(now.getMinutes() - 5))) {
+      return { error: 'Invalid date selection' };
+    }
+
+    // Check availability for the new dates, excluding the current request
+    const overlappingRequests = await (prisma as any).request.findMany({
+      where: {
+        itemId: existingRequest.itemId,
+        status: 'accepted',
+        id: { not: requestId }, // Exclude this request
+        startDate: { lte: parsedEnd },
+        endDate: { gte: parsedStart },
+      },
+    });
+
+    if (overlappingRequests.length > 0) {
+      return { error: 'Item not available for selected dates' };
+    }
+
+    await (prisma as any).request.update({
+      where: { id: requestId },
+      data: {
+        startDate: parsedStart,
+        endDate: parsedEnd,
+      },
+    });
+
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error) {
+    console.error(`[Request Action] Failed to update request dates:`, error);
+    return { error: 'Oops! We hit an error updating your dates. Please try again.' };
+  }
+}
+
+export async function syncRequestStatuses() {
+  const now = new Date();
+
+  try {
+    // 1. Mark accepted requests as completed if endDate has passed
+    const acceptedToExpire = await (prisma as any).request.findMany({
+      where: {
+        status: 'accepted',
+        endDate: { lt: now }
+      }
+    });
+
+    if (acceptedToExpire.length > 0) {
+      console.log(`[Request Sync] Auto-completing ${acceptedToExpire.length} requests.`);
+      await (prisma as any).request.updateMany({
+        where: {
+          id: { in: acceptedToExpire.map((r: any) => r.id) }
+        },
+        data: { status: 'completed' }
+      });
+    }
+
+    // 2. Mark pending requests as rejected if startDate has passed
+    const pendingToExpire = await (prisma as any).request.findMany({
+      where: {
+        status: 'pending',
+        startDate: { lt: now }
+      }
+    });
+
+    if (pendingToExpire.length > 0) {
+      console.log(`[Request Sync] Expiring ${pendingToExpire.length} pending requests.`);
+      await (prisma as any).request.updateMany({
+        where: {
+          id: { in: pendingToExpire.map((r: any) => r.id) }
+        },
+        data: { status: 'rejected' }
+      });
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error(`[Request Action] Status sync failed:`, error);
+    return { error: 'Failed to sync statuses' };
+  }
+}

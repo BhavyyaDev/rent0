@@ -41,6 +41,10 @@ export function SearchFilters() {
   const updateFilters = useCallback((newSort: string, newRange: number[]) => {
     const params = new URLSearchParams(searchParams.toString());
     
+    // Maintain the search text if it exists
+    const q = searchParams.get('q');
+    if (q) params.set('q', q);
+    
     if (newSort === 'newest') params.delete('sort');
     else params.set('sort', newSort);
     

@@ -13,7 +13,7 @@ export function HeroSearchForm() {
     const params = new URLSearchParams();
     
     if (searchTerm.trim()) {
-      params.set("search", searchTerm.trim());
+      params.set("q", searchTerm.trim());
     }
     
     // Explicit SPA client-side push to search

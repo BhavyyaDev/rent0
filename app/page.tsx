@@ -144,7 +144,7 @@ export default function Home() {
               Join thousands of creators who use RentO to access the equipment they need, when they need it.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-              <Link href="/search">
+              <Link href="/explore">
                 <Button className="rounded-full h-16 px-10 bg-emerald-500 hover:bg-emerald-600 text-slate-900 text-lg font-bold shadow-lg shadow-emerald-500/20">
                   Start Exploring
                 </Button>

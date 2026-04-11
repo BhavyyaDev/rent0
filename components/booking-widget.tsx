@@ -27,9 +27,29 @@ const parseTimeToHours = (timeStr: string) => {
   return { hours: Number(hours), minutes: Number(minutes) };
 };
 
-export function BookingWidget({ itemId, pricePerDay }: { itemId: string, pricePerDay: number }) {
+export function BookingWidget({ 
+  itemId, 
+  pricePerDay,
+  bookedRanges = [] 
+}: { 
+  itemId: string, 
+  pricePerDay: number,
+  bookedRanges?: { from: string, to: string }[]
+}) {
   const { isSignedIn, isLoaded } = useUser();
   const router = useRouter();
+
+  // Convert string ranges back to Date objects for react-day-picker
+  const disabledDays = useMemo(() => {
+    const ranges = bookedRanges.map(range => ({
+      from: new Date(range.from),
+      to: new Date(range.to)
+    }));
+    return [
+      { before: new Date() }, // Past dates
+      ...ranges
+    ];
+  }, [bookedRanges]);
   
   const [date, setDate] = useState<DateRange | undefined>();
   const [startTime, setStartTime] = useState("10:00 AM");
@@ -67,6 +87,14 @@ export function BookingWidget({ itemId, pricePerDay }: { itemId: string, pricePe
 
   useEffect(() => {
     if (datesSelected && finalStart && finalEnd) {
+      // Direct chronological validation
+      if (finalStart >= finalEnd) {
+        setIsAvailable(null);
+        setErrorMsg('End date must be after start date');
+        setIsCheckingDates(false);
+        return;
+      }
+
       const verify = async () => {
         setIsCheckingDates(true);
         setIsAvailable(null);
@@ -92,7 +120,7 @@ export function BookingWidget({ itemId, pricePerDay }: { itemId: string, pricePe
       }, 1200);
       return;
     }
-    if (!finalStart || !finalEnd) return;
+    if (!finalStart || !finalEnd || finalStart >= finalEnd) return;
 
     setIsPending(true);
     setSuccessMsg('');
@@ -108,11 +136,33 @@ export function BookingWidget({ itemId, pricePerDay }: { itemId: string, pricePe
     setIsPending(false);
   };
 
+  const handleSetDate = (newRange: DateRange | undefined) => {
+    if (newRange?.from && newRange?.to) {
+      // Check if any date in the range is disabled (booked)
+      const isUnavailable = bookedRanges.some(range => {
+        const bookedFrom = new Date(range.from);
+        const bookedTo = new Date(range.to);
+        // If selected range encompasses or touches a booked range
+        return (newRange.from! <= bookedTo && newRange.to! >= bookedFrom);
+      });
+
+      if (isUnavailable) {
+        setErrorMsg('Some dates in your selection are unavailable.');
+        return;
+      }
+    }
+    setDate(newRange);
+    setErrorMsg('');
+  };
+
   return (
     <div className="flex flex-col w-full mt-2 bg-white rounded-3xl pb-2 shadow-sm border border-slate-100 p-6">
        
       <div className="mb-6 flex justify-between items-baseline">
          <span className="text-2xl font-extrabold text-slate-900">₹{pricePerDay.toLocaleString()} <span className="text-base font-normal text-slate-500">day</span></span>
+         {bookedRanges.length > 0 && (
+           <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full border border-amber-100">Some dates unavailable</span>
+         )}
       </div>
 
       <Popover>
@@ -147,9 +197,9 @@ export function BookingWidget({ itemId, pricePerDay }: { itemId: string, pricePe
             mode="range"
             defaultMonth={date?.from}
             selected={date}
-            onSelect={setDate}
+            onSelect={handleSetDate}
             numberOfMonths={2}
-            disabled={{ before: new Date() }}
+            disabled={disabledDays}
             className="p-4"
           />
           {/* Optional Time Selector Bar */}
@@ -223,10 +273,10 @@ export function BookingWidget({ itemId, pricePerDay }: { itemId: string, pricePe
           <Button 
             size="lg" 
             onClick={handleRentNow}
-            disabled={isPending || !!successMsg || isAvailable === false || isCheckingDates || !isLoaded}
+            disabled={isPending || !!successMsg || isAvailable === false || isCheckingDates || !isLoaded || (finalStart! >= finalEnd!)}
             className="w-full rounded-2xl text-lg h-14 font-extrabold transition-all bg-[#FF385C] text-white hover:bg-[#D90B3E] mt-6 shadow-[0_6px_16px_rgba(255,56,92,0.3)] disabled:opacity-50 disabled:shadow-none hover:-translate-y-[1px]"
           >
-            {!isLoaded ? 'Loading...' : !isSignedIn ? 'Sign in to Rent' : isPending ? (
+            {!isLoaded ? 'Loading...' : !isSignedIn ? 'Sign in to book' : isPending ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="w-5 h-5 animate-spin" />
                 Processing request...

@@ -12,6 +12,15 @@ export function RequestActionButtons({ requestId, status }: { requestId: string,
     });
   };
 
+
+  if (status === 'completed') {
+    return (
+      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[13px] font-bold bg-blue-100 text-blue-700 whitespace-nowrap shadow-sm border border-blue-200">
+        Rental completed ✨
+      </span>
+    );
+  }
+
   if (status === 'accepted') {
     return (
       <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[13px] font-bold bg-emerald-100 text-emerald-700 whitespace-nowrap shadow-sm border border-emerald-200">

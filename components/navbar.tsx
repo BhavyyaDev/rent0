@@ -15,7 +15,7 @@ export function Navbar({ role = 'renter' }: { role?: string }) {
           RentO
         </Link>
         <div className="flex items-center gap-4">
-          <Link href="/search" className="text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors">
+          <Link href="/explore" className="text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors">
             Explore
           </Link>
           {!isLoaded ? null : isSignedIn ? (
