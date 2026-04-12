@@ -191,17 +191,22 @@ export function BookingWidget({
             </div>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 rounded-[24px] shadow-2xl border border-slate-100 overflow-hidden" align="center">
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={date?.from}
-            selected={date}
-            onSelect={handleSetDate}
-            numberOfMonths={2}
-            disabled={disabledDays}
-            className="p-4"
-          />
+        <PopoverContent className="w-fit p-0 rounded-[32px] shadow-2xl border border-slate-100 overflow-hidden" align="center">
+          <div className="bg-white p-2">
+            <Calendar
+              initialFocus
+              mode="range"
+              defaultMonth={date?.from}
+              selected={date}
+              onSelect={handleSetDate}
+              numberOfMonths={2}
+              disabled={disabledDays}
+              className="p-4"
+              classNames={{
+                months: "flex flex-col sm:flex-row space-y-4 sm:space-x-8 sm:space-y-0",
+              }}
+            />
+          </div>
           {/* Optional Time Selector Bar */}
           <div className="flex items-center gap-4 p-4 bg-slate-50 border-t border-slate-100">
              <div className="flex-1 flex flex-col gap-1.5">

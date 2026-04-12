@@ -124,10 +124,10 @@ export default async function SearchPage(props: { searchParams?: Promise<{ [key:
                 <SearchIcon className="w-10 h-10 text-slate-300" />
               </div>
               <h3 className="text-[26px] font-extrabold text-[#222222] mb-3">
-                No results found
+                No items found for your search
               </h3>
               <p className="text-[17px] text-[#717171] max-w-md mx-auto mb-10 font-medium leading-relaxed">
-                We couldn't find exactly what you were looking for. Try adjusting your search term, or explore some of our most popular rental categories below.
+                We couldn't find exactly what you were looking for. Explore some of our popular categories below or clear your filters to see our full inventory.
               </p>
               {categoryFilter ? (
                 <Link
