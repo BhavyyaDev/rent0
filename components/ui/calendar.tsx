@@ -133,7 +133,6 @@ function Calendar({
           "text-slate-300 opacity-30 line-through decoration-slate-400",
           defaultClassNames.disabled
         ),
-        booked: "bg-red-50 text-red-400 opacity-80 line-through decoration-red-200",
         hidden: cn("invisible", defaultClassNames.hidden),
         ...classNames,
       }}
