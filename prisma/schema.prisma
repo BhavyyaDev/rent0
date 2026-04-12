@@ -7,27 +7,27 @@ datasource db {
 }
 
 model User {
-  id         String   @id
-  email      String   @unique
+  id         String    @id
+  email      String    @unique
   name       String?
-  role       String   @default("onboarding")
-  trustScore Int      @default(100)
-  createdAt  DateTime @default(now())
+  trustScore Int       @default(100)
+  createdAt  DateTime  @default(now())
+  role       String    @default("onboarding")
   items      Item[]
   requests   Request[]
 }
 
 model Item {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
   description String
   pricePerDay Float
   imageUrl    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   ownerId     String
-  owner       User     @relation(fields: [ownerId], references: [id])
-  category    String   @default("Other")
+  category    String    @default("Other")
+  owner       User      @relation(fields: [ownerId], references: [id])
   requests    Request[]
 }
 
@@ -39,7 +39,6 @@ model Request {
   endDate   DateTime
   status    String   @default("pending")
   createdAt DateTime @default(now())
-
-  item   Item @relation(fields: [itemId], references: [id])
-  renter User @relation(fields: [renterId], references: [id])
+  item      Item     @relation(fields: [itemId], references: [id])
+  renter    User     @relation(fields: [renterId], references: [id])
 }

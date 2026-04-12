@@ -17,15 +17,31 @@ export default async function SearchPage(props: { searchParams?: Promise<{ [key:
   let items: Item[] = [];
   let categoryFilter = '';
   let q = '';
+  let isDateFiltering = false;
+  let parsedStartDate: Date | undefined;
+  let parsedEndDate: Date | undefined;
 
   try {
     // Safely await robust searchParams intercepting undefined completely
     const searchParams = (await props.searchParams) || {};
-    categoryFilter = searchParams.category || '';
+    const categoryParamArray = searchParams.category;
+    // Handle potential arrays from query params safely
+    const categoryParam = Array.isArray(categoryParamArray) ? categoryParamArray[0] : categoryParamArray;
+    categoryFilter = categoryParam || '';
     q = String(searchParams.q || '').trim();
     const sort = searchParams.sort || 'newest';
-    const startDate = searchParams.startDate;
-    const endDate = searchParams.endDate;
+    const startDateParam = searchParams.startDate;
+    const endDateParam = searchParams.endDate;
+
+    if (startDateParam && endDateParam) {
+      const s = new Date(startDateParam);
+      const e = new Date(endDateParam);
+      if (!isNaN(s.getTime()) && !isNaN(e.getTime())) {
+        parsedStartDate = s;
+        parsedEndDate = e;
+        isDateFiltering = true;
+      }
+    }
 
     // Use safe parsing for numeric filters
     const minPriceStr = searchParams.minPrice;
@@ -33,8 +49,10 @@ export default async function SearchPage(props: { searchParams?: Promise<{ [key:
     const minPrice = minPriceStr ? parseInt(minPriceStr) : undefined;
     const maxPrice = maxPriceStr ? parseInt(maxPriceStr) : undefined;
 
-    // Build a robust whereClause that never passes undefined or NaN to Prisma
-    const whereClause: any = {};
+    // Build a robust whereClause following strict category requirements
+    const whereClause: any = {
+      category: categoryParam || undefined,
+    };
     const conditions: any[] = [];
     
     if (q) {
@@ -46,18 +64,16 @@ export default async function SearchPage(props: { searchParams?: Promise<{ [key:
       });
     }
     
-    if (categoryFilter && categoryFilter !== 'all') {
-      conditions.push({ category: categoryFilter });
-    }
 
-    // NEW: Date-based availability filtering
-    if (startDate && endDate) {
+
+    // NEW: Date-based availability filtering (Overlap exclusion)
+    if (isDateFiltering && parsedStartDate && parsedEndDate) {
       conditions.push({
         requests: {
           none: {
             status: 'accepted',
-            startDate: { lte: new Date(endDate) },
-            endDate: { gte: new Date(startDate) }
+            startDate: { lte: parsedEndDate },
+            endDate: { gte: parsedStartDate }
           }
         }
       });
@@ -124,7 +140,9 @@ export default async function SearchPage(props: { searchParams?: Promise<{ [key:
                 <SearchIcon className="w-10 h-10 text-slate-300" />
               </div>
               <h3 className="text-[26px] font-extrabold text-[#222222] mb-3">
-                No items found for your search
+                {isDateFiltering 
+                  ? "No items available for selected dates" 
+                  : "No items found for your search"}
               </h3>
               <p className="text-[17px] text-[#717171] max-w-md mx-auto mb-10 font-medium leading-relaxed">
                 We couldn't find exactly what you were looking for. Explore some of our popular categories below or clear your filters to see our full inventory.

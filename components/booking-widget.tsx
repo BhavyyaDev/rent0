@@ -40,16 +40,19 @@ export function BookingWidget({
   const router = useRouter();
 
   // Convert string ranges back to Date objects for react-day-picker
-  const disabledDays = useMemo(() => {
-    const ranges = bookedRanges.map(range => ({
+  const bookedDays = useMemo(() => {
+    return bookedRanges.map(range => ({
       from: new Date(range.from),
       to: new Date(range.to)
     }));
+  }, [bookedRanges]);
+
+  const disabledDays = useMemo(() => {
     return [
       { before: new Date() }, // Past dates
-      ...ranges
+      ...bookedDays
     ];
-  }, [bookedRanges]);
+  }, [bookedDays]);
   
   const [date, setDate] = useState<DateRange | undefined>();
   const [startTime, setStartTime] = useState("10:00 AM");
@@ -201,6 +204,7 @@ export function BookingWidget({
               onSelect={handleSetDate}
               numberOfMonths={2}
               disabled={disabledDays}
+              modifiers={{ booked: bookedDays }}
               className="p-4"
               classNames={{
                 months: "flex flex-col sm:flex-row space-y-4 sm:space-x-8 sm:space-y-0",

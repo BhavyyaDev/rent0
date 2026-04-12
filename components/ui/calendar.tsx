@@ -133,6 +133,7 @@ function Calendar({
           "text-slate-300 opacity-30 line-through decoration-slate-400",
           defaultClassNames.disabled
         ),
+        booked: "bg-red-50 text-red-400 opacity-80 line-through decoration-red-200",
         hidden: cn("invisible", defaultClassNames.hidden),
         ...classNames,
       }}
@@ -212,8 +213,9 @@ function CalendarDayButton({
       data-range-start={modifiers.range_start}
       data-range-end={modifiers.range_end}
       data-range-middle={modifiers.range_middle}
+      data-booked={modifiers.booked}
       className={cn(
-        "relative isolate z-10 flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 border-0 leading-none font-bold group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-[3px] group-data-[focused=true]/day:ring-ring/50 data-[range-end=true]:rounded-full data-[range-end=true]:bg-[#FF385C] data-[range-end=true]:text-white data-[range-middle=true]:rounded-none data-[range-middle=true]:bg-transparent data-[range-middle=true]:text-[#FF385C] data-[range-start=true]:rounded-full data-[range-start=true]:bg-[#FF385C] data-[range-start=true]:text-white data-[selected-single=true]:rounded-full data-[selected-single=true]:bg-[#FF385C] data-[selected-single=true]:text-white dark:hover:text-foreground [&>span]:text-xs [&>span]:opacity-70",
+        "relative isolate z-10 flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 border-0 leading-none font-bold group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-[3px] group-data-[focused=true]/day:ring-ring/50 data-[booked=true]:bg-red-50 data-[booked=true]:text-red-400 data-[booked=true]:rounded-md data-[range-end=true]:rounded-full data-[range-end=true]:bg-[#FF385C] data-[range-end=true]:text-white data-[range-middle=true]:rounded-none data-[range-middle=true]:bg-transparent data-[range-middle=true]:text-[#FF385C] data-[range-start=true]:rounded-full data-[range-start=true]:bg-[#FF385C] data-[range-start=true]:text-white data-[selected-single=true]:rounded-full data-[selected-single=true]:bg-[#FF385C] data-[selected-single=true]:text-white dark:hover:text-foreground [&>span]:text-xs [&>span]:opacity-70",
         defaultClassNames.day,
         className
       )}

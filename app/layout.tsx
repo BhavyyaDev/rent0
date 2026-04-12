@@ -29,13 +29,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  let globalRole = 'onboarding';
+  let globalRole = 'guest';
   const user = await currentUser();
   const headerList = await headers();
   const rawUrl = headerList.get('x-url') || '';
   const pathname = rawUrl ? new URL(rawUrl).pathname : '';
 
   if (user) {
+    globalRole = 'onboarding';
     // Sync the user to ensure they exist in DB
     const dbUser = (await syncUser()) as any;
     if (dbUser?.role) {
