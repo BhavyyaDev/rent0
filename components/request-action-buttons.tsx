@@ -15,32 +15,32 @@ export function RequestActionButtons({ requestId, status }: { requestId: string,
 
   if (status === 'completed') {
     return (
-      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[13px] font-bold bg-blue-100 text-blue-700 whitespace-nowrap shadow-sm border border-blue-200">
-        Rental completed ✨
+      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-blue-100 text-blue-700 whitespace-nowrap shadow-sm border border-blue-200">
+        Completed
       </span>
     );
   }
 
   if (status === 'accepted') {
     return (
-      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[13px] font-bold bg-emerald-100 text-emerald-700 whitespace-nowrap shadow-sm border border-emerald-200">
-        Request accepted ✅
+      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-emerald-100 text-emerald-700 whitespace-nowrap shadow-sm border border-emerald-200">
+        Booking confirmed
       </span>
     );
   }
 
   if (status === 'rejected') {
     return (
-      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[13px] font-bold bg-red-100 text-red-700 whitespace-nowrap shadow-sm border border-red-200">
-        Request rejected ❌
+      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-red-100 text-red-700 whitespace-nowrap shadow-sm border border-red-200">
+        Request declined
       </span>
     );
   }
 
   return (
     <div className="flex flex-col gap-2.5">
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-slate-100 text-slate-500 uppercase tracking-widest w-max border border-slate-200">
-        Pending
+      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-extrabold bg-slate-100 text-slate-500 uppercase tracking-widest w-max border border-slate-200 shadow-sm">
+        Waiting for owner approval
       </span>
       <div className="flex items-center gap-2">
         <button 

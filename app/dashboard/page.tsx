@@ -257,24 +257,36 @@ export default async function DashboardPage() {
                           <td className="p-5 w-60">
                             <div className="flex items-center gap-3">
                               {req.status === 'completed' && (
-                                <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-blue-100 text-blue-700 border border-blue-200 shadow-sm whitespace-nowrap">
-                                  Completed! Welcome back ✨
-                                </span>
+                                <div className="flex flex-col gap-1">
+                                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-blue-100 text-blue-700 border border-blue-200 shadow-sm whitespace-nowrap w-fit">
+                                    Completed
+                                  </span>
+                                  <span className="text-[11px] text-blue-500 font-bold ml-1">Gear returned successfully ✨</span>
+                                </div>
                               )}
                               {req.status === 'pending' && (
-                                <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm whitespace-nowrap">
-                                  Waiting for owner
-                                </span>
+                                <div className="flex flex-col gap-1">
+                                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm whitespace-nowrap w-fit">
+                                    Waiting for owner approval
+                                  </span>
+                                  <span className="text-[11px] text-slate-500 font-bold ml-1">Owner will respond soon</span>
+                                </div>
                               )}
                               {req.status === 'accepted' && (
-                                <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm whitespace-nowrap">
-                                  Accepted - proceed to pickup
-                                </span>
+                                <div className="flex flex-col gap-1">
+                                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm whitespace-nowrap w-fit">
+                                    Booking confirmed
+                                  </span>
+                                  <span className="text-[11px] text-emerald-600 font-bold ml-1">Coordinate pickup with owner</span>
+                                </div>
                               )}
                               {req.status === 'rejected' && (
-                                <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm whitespace-nowrap">
-                                  Rejected
-                                </span>
+                                <div className="flex flex-col gap-1">
+                                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm whitespace-nowrap w-fit">
+                                    Request declined
+                                  </span>
+                                  <span className="text-[11px] text-red-500 font-bold ml-1">Try another item</span>
+                                </div>
                               )}
 
                               {/* Edit/Cancellation Button Logic */}

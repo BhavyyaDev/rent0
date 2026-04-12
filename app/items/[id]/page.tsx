@@ -111,6 +111,7 @@ export default async function ItemDetailPage({
 
             <BookingWidget 
               itemId={item?.id || ''} 
+              itemTitle={item?.title || ''}
               pricePerDay={item?.pricePerDay || 0} 
               bookedRanges={bookedRanges}
             />

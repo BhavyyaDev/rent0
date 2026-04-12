@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from './ui/button';
 import { createRequest, checkAvailability } from '@/app/actions/request';
-import { Loader2, Calendar as CalendarIcon, Clock, ChevronRight } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon, Clock, ChevronRight, ArrowRight } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { format } from "date-fns";
@@ -11,6 +11,13 @@ import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 const TIME_SLOTS = [
   "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", 
@@ -29,10 +36,12 @@ const parseTimeToHours = (timeStr: string) => {
 
 export function BookingWidget({ 
   itemId, 
+  itemTitle,
   pricePerDay,
   bookedRanges = [] 
 }: { 
   itemId: string, 
+  itemTitle: string,
   pricePerDay: number,
   bookedRanges?: { from: string, to: string }[]
 }) {
@@ -64,13 +73,15 @@ export function BookingWidget({
   
   const [isCheckingDates, setIsCheckingDates] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   const datesSelected = date?.from && date?.to;
 
   const calculateDays = (start?: Date, end?: Date) => {
     if (!start || !end) return 0;
-    const timeDiff = end.getTime() - start.getTime();
+    const timeDiff = Math.abs(end.getTime() - start.getTime());
     const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    // Step 1: Minimum 1 day and Math.ceil for safety
     return daysDiff > 0 ? daysDiff : 1; 
   };
 
@@ -114,7 +125,7 @@ export function BookingWidget({
     }
   }, [datesSelected, finalStart?.toISOString(), finalEnd?.toISOString(), itemId]);
 
-  const handleRentNow = async () => {
+  const handleRentNow = () => {
     if (!isLoaded) return;
     if (!isSignedIn) {
       setErrorMsg('Please sign in to continue');
@@ -124,17 +135,25 @@ export function BookingWidget({
       return;
     }
     if (!finalStart || !finalEnd || finalStart >= finalEnd) return;
+    setIsConfirmModalOpen(true);
+  };
 
+  const handleConfirmBooking = async () => {
+    if (!finalStart || !finalEnd) return;
+    
     setIsPending(true);
     setSuccessMsg('');
     setErrorMsg('');
     
-    // Explicit server request using exact times
+    // Step 4 & 6: Actual server request on final confirmation
     const res = await createRequest(itemId, finalStart.toISOString(), finalEnd.toISOString());
     if (res?.error) {
       setErrorMsg(res.error);
+      setIsConfirmModalOpen(false);
     } else {
       setSuccessMsg('Request sent successfully ✅');
+      setIsConfirmModalOpen(false);
+      // Optional: auto-redirect after brief delay or stay for feedback
     }
     setIsPending(false);
   };
@@ -239,7 +258,8 @@ export function BookingWidget({
       </Popover>
 
       {/* Confirmation Layout Block */}
-      {datesSelected ? (
+      {/* Confirmation Layout Block - Step 4 & 5: Only show if dates selected and available */}
+      {datesSelected && isAvailable !== false ? (
         <div className="flex flex-col animate-in fade-in zoom-in-95 duration-300 mt-6">
           {isCheckingDates ? (
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center mb-5 animate-pulse">
@@ -256,15 +276,19 @@ export function BookingWidget({
             </div>
           ) : null}
           
-          <div className="flex flex-col gap-3 py-2 px-1">
-            <div className="flex justify-between items-center text-[#717171] font-medium text-[15px]">
-              <span className="underline decoration-slate-300 underline-offset-4 pointer-events-none">₹{pricePerDay.toLocaleString()} x {days} {days === 1 ? 'day' : 'days'}</span>
-              <span>₹{total.toLocaleString()}</span>
-            </div>
-            {/* Minimal spacing for UI fidelity */}
-            <div className="flex justify-between items-center text-[#222222] font-extrabold text-lg pt-5 border-t border-slate-200 mt-2">
-              <span>Total</span>
-              <span>₹{total.toLocaleString()}</span>
+          <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-100/80 mb-6 font-medium">
+            <div className="flex flex-col gap-3.5">
+              <div className="flex justify-between items-center text-slate-600 text-[15px]">
+                <span className="flex items-center gap-1">
+                  ₹{pricePerDay.toLocaleString()}/day × {days} {days === 1 ? 'day' : 'days'}
+                </span>
+                <span className="font-bold text-slate-900">₹{total.toLocaleString()}</span>
+              </div>
+              
+              <div className="flex justify-between items-center text-slate-900 font-extrabold text-lg pt-4 border-t border-slate-200">
+                <span>Total Price</span>
+                <span className="text-[#FF385C]">₹{total.toLocaleString()}</span>
+              </div>
             </div>
           </div>
 
@@ -313,6 +337,70 @@ export function BookingWidget({
           Rent Now
         </Button>
       )}
+
+      {/* Confirmation Modal */}
+      <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
+        <DialogContent className="max-w-[420px] p-0 overflow-hidden rounded-[32px] border-none shadow-2xl">
+          <div className="p-8">
+            <DialogHeader className="mb-6">
+              <DialogTitle className="text-2xl font-extrabold text-[#222222]">Confirm booking</DialogTitle>
+              <DialogDescription className="text-[15px] font-medium text-slate-500 mt-1">
+                Please review your rental details before confirming.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 flex flex-col gap-5 mb-8">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Item</span>
+                <span className="text-lg font-bold text-slate-900 leading-tight">{itemTitle}</span>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Rental Period</span>
+                <div className="flex items-center gap-3 text-[16px] font-bold text-slate-800">
+                  <span>{date?.from ? format(date.from, "MMM dd") : ""}</span>
+                  <ArrowRight className="w-4 h-4 text-slate-300" />
+                  <span>{date?.to ? format(date.to, "MMM dd, yyyy") : ""}</span>
+                </div>
+              </div>
+
+              <div className="pt-5 border-t border-slate-200 flex justify-between items-center">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[12px] font-bold text-slate-400 uppercase tracking-tighter">Total Price</span>
+                  <span className="text-2xl font-extrabold text-[#FF385C]">₹{total.toLocaleString()}</span>
+                </div>
+                <div className="text-right">
+                   <span className="text-[13px] font-bold text-slate-500">₹{pricePerDay.toLocaleString()} × {days}d</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <Button 
+                size="lg" 
+                onClick={handleConfirmBooking}
+                className="w-full h-14 rounded-2xl bg-[#FF385C] hover:bg-[#D90B3E] text-white font-extrabold text-lg shadow-lg shadow-pink-200 transition-all active:scale-[0.98]"
+                disabled={isPending}
+              >
+                {isPending ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Confirming...
+                  </span>
+                ) : "Confirm Booking"}
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="lg" 
+                onClick={() => setIsConfirmModalOpen(false)}
+                className="w-full h-12 rounded-2xl text-slate-500 font-bold hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
