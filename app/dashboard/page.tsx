@@ -160,6 +160,7 @@ export default async function DashboardPage() {
                         <th className="p-5 font-bold">Item</th>
                         <th className="p-5 font-bold">Renter</th>
                         <th className="p-5 font-bold">Dates</th>
+                        <th className="p-5 font-bold text-right">Earnings</th>
                         <th className="p-5 font-bold">Status</th>
                       </tr>
                     </thead>
@@ -177,8 +178,21 @@ export default async function DashboardPage() {
                           <td className="p-5 text-slate-600 font-bold whitespace-nowrap text-sm">
                             {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
                           </td>
+                          <td className="p-5 text-right">
+                            <div className="font-extrabold text-[#222222]">₹{(req.totalPrice || 0).toLocaleString()}</div>
+                            {req.paymentStatus === 'held' ? (
+                              <div className="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">Pending Release</div>
+                            ) : req.paymentStatus === 'released' ? (
+                              <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-tighter">Received</div>
+                            ) : null}
+                          </td>
                           <td className="p-5 w-40">
                             <RequestActionButtons requestId={req.id} status={req.status} />
+                            {req.paymentStatus === 'released' && (
+                              <div className="mt-2 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 text-center">
+                                Payment released to owner
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -254,6 +268,15 @@ export default async function DashboardPage() {
                           <td className="p-5 text-slate-600 font-bold whitespace-nowrap text-[14px]">
                             {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
                           </td>
+                          <td className="p-5">
+                            <div className="flex flex-col">
+                              <span className="font-extrabold text-slate-900 text-[15px]">₹{(req.totalPrice || 0).toLocaleString()}</span>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Deposit</span>
+                                <span className="text-[11px] font-bold text-amber-600">₹{(req.deposit || 0).toLocaleString()}</span>
+                              </div>
+                            </div>
+                          </td>
                           <td className="p-5 w-60">
                             <div className="flex items-center gap-3">
                               {req.status === 'completed' && (
@@ -278,6 +301,12 @@ export default async function DashboardPage() {
                                     Booking confirmed
                                   </span>
                                   <span className="text-[11px] text-emerald-600 font-bold ml-1">Coordinate pickup with owner</span>
+                                  {req.paymentStatus === 'held' && (
+                                    <div className="mt-2 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 flex items-center gap-1.5">
+                                      <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                                      Deposit secured
+                                    </div>
+                                  )}
                                 </div>
                               )}
                               {req.status === 'rejected' && (
@@ -285,7 +314,7 @@ export default async function DashboardPage() {
                                   <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm whitespace-nowrap w-fit">
                                     Request declined
                                   </span>
-                                  <span className="text-[11px] text-red-500 font-bold ml-1">Try another item</span>
+                                  <span className="text-[11px] text-red-500 font-bold ml-1">Try different dates or explore similar items</span>
                                 </div>
                               )}
 

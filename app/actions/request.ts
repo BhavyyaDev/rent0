@@ -37,16 +37,33 @@ export async function createRequest(itemId: string, startDate: string | Date, en
       return { error: 'Item not available for selected dates' };
     }
 
+    // Fetch item to get price for calculation
+    const item = await prisma.item.findUnique({ where: { id: itemId } });
+    if (!item) return { error: 'Item not found' };
+
+    const timeDiff = Math.abs(parsedEnd.getTime() - parsedStart.getTime());
+    const days = Math.ceil(timeDiff / (1000 * 3600 * 24)) || 1;
+    const totalPrice = days * item.pricePerDay;
+    const deposit = totalPrice * 0.5;
+
+    console.log("Creating request with:", {
+      totalPrice,
+      deposit,
+    });
+
     const request = await (prisma as any).request.create({
       data: {
         itemId,
         renterId: user.id,
         startDate: parsedStart,
         endDate: parsedEnd,
+        totalPrice,
+        deposit,
+        paymentStatus: 'held', // Simulate the funds being secured in escrow
       },
     });
 
-    console.log(`[Request Action] Rental request created in DB:`, request.id);
+    console.log(`[Escrow] Rental request created: ₹${totalPrice} (₹${deposit} held)`);
 
     return { success: true, requestId: request.id };
   } catch (error) {
@@ -92,7 +109,11 @@ export async function updateRequestStatus(requestId: string, status: string) {
 
     await (prisma as any).request.update({
       where: { id: requestId },
-      data: { status },
+      data: { 
+        status,
+        // If owner completes the request, release the payment
+        paymentStatus: status === 'completed' ? 'released' : undefined
+      },
     });
 
     revalidatePath('/dashboard');
@@ -120,6 +141,7 @@ export async function checkAvailability(itemId: string, startDate: string | Date
     return { available: overlappingRequests.length === 0 };
   } catch (error) {
     console.error(`[Request Action] Failed to check availability:`, error);
+    // Explicit safe failure: assume unavailable if check fails to prevent double bookings
     return { available: false, error: 'Hmm, we had trouble checking those dates. Please try again.' };
   }
 }
@@ -232,7 +254,10 @@ export async function syncRequestStatuses() {
         where: {
           id: { in: acceptedToExpire.map((r: any) => r.id) }
         },
-        data: { status: 'completed' }
+        data: { 
+          status: 'completed',
+          paymentStatus: 'released'
+        }
       });
     }
 

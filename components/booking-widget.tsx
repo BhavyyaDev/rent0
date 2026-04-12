@@ -117,8 +117,8 @@ export function BookingWidget({
         setIsAvailable(res.available);
         setIsCheckingDates(false);
       };
-      // Simple debounce to avoid spamming the DB while dragging
-      const timeoutId = setTimeout(() => verify(), 400); 
+      // Selection debounce: Only check DB after user finishes selecting (500ms delay)
+      const timeoutId = setTimeout(() => verify(), 500); 
       return () => clearTimeout(timeoutId);
     } else {
       setIsAvailable(null);
@@ -151,7 +151,7 @@ export function BookingWidget({
       setErrorMsg(res.error);
       setIsConfirmModalOpen(false);
     } else {
-      setSuccessMsg('Request sent successfully ✅');
+      setSuccessMsg('Request sent to owner');
       setIsConfirmModalOpen(false);
       // Optional: auto-redirect after brief delay or stay for feedback
     }
@@ -159,22 +159,45 @@ export function BookingWidget({
   };
 
   const handleSetDate = (newRange: DateRange | undefined) => {
-    if (newRange?.from && newRange?.to) {
-      // Check if any date in the range is disabled (booked)
+    let finalRange = newRange;
+
+    // Condition 1: If we already have a full range, any new click starts fresh (Forced Reset)
+    if (date?.from && date?.to) {
+      const newlyClicked = (newRange?.to && newRange.to.getTime() !== date.to.getTime()) 
+        ? newRange.to 
+        : (newRange?.from && newRange.from.getTime() !== date.from.getTime())
+          ? newRange.from
+          : newRange?.from;
+
+      if (newlyClicked) {
+        finalRange = { from: newlyClicked, to: undefined };
+      }
+    } else if (date?.from && !date?.to && newRange?.to) {
+      // Condition 2: Backwards selection check
+      // If user picks a 'to' date smaller than 'from', reset 'from' to that smaller date
+      if (newRange.to < date.from) {
+        finalRange = { from: newRange.to, to: undefined };
+      }
+    }
+
+    // Availability validation (non-blocking for UI selection)
+    if (finalRange?.from && finalRange?.to) {
       const isUnavailable = bookedRanges.some(range => {
         const bookedFrom = new Date(range.from);
         const bookedTo = new Date(range.to);
-        // If selected range encompasses or touches a booked range
-        return (newRange.from! <= bookedTo && newRange.to! >= bookedFrom);
+        return (finalRange!.from! <= bookedTo && finalRange!.to! >= bookedFrom);
       });
 
       if (isUnavailable) {
         setErrorMsg('Some dates in your selection are unavailable.');
-        return;
+      } else {
+        setErrorMsg('');
       }
+    } else {
+      setErrorMsg('');
     }
-    setDate(newRange);
-    setErrorMsg('');
+    
+    setDate(finalRange);
   };
 
   return (
@@ -221,7 +244,7 @@ export function BookingWidget({
               defaultMonth={date?.from}
               selected={date}
               onSelect={handleSetDate}
-              numberOfMonths={2}
+              numberOfMonths={1}
               disabled={disabledDays}
               modifiers={{ booked: bookedDays }}
               className="p-4"
@@ -287,9 +310,24 @@ export function BookingWidget({
                   <span className="font-bold text-slate-900">₹{total.toLocaleString()}</span>
                 </div>
                 
+                <div className="flex justify-between items-center text-slate-500 text-[14px]">
+                  <span className="flex items-center gap-1.5">
+                    Security Deposit 
+                    <span className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-600 font-extrabold uppercase">Held</span>
+                  </span>
+                  <span className="font-bold">₹{(total * 0.5).toLocaleString()}</span>
+                </div>
+                
                 <div className="flex justify-between items-center text-slate-900 font-extrabold text-lg pt-4 border-t border-slate-200">
-                  <span>Total Price</span>
-                  <span className="text-[#FF385C]">₹{total.toLocaleString()}</span>
+                  <div className="flex flex-col">
+                    <span>Total Due</span>
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tighter">Incl. refundable deposit</span>
+                  </div>
+                  <span className="text-[#FF385C]">₹{(total * 1.5).toLocaleString()}</span>
+                </div>
+
+                <div className="mt-2 text-[11px] font-bold text-amber-700 bg-amber-50 px-3 py-2 rounded-xl border border-amber-100/50 text-center animate-in fade-in slide-in-from-top-1 duration-500">
+                  ₹{(total * 0.5).toLocaleString()} deposit will be held and released after return
                 </div>
               </div>
             </div>
@@ -315,9 +353,9 @@ export function BookingWidget({
             {!isLoaded ? 'Loading...' : !isSignedIn ? 'Sign in to book' : isPending ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Processing request...
+                Processing...
               </span>
-            ) : successMsg ? 'Requested' : 'Rent Now'}
+            ) : !datesSelected ? 'Check Availability' : isCheckingDates ? 'Checking...' : isAvailable === true ? 'Confirm Booking' : isAvailable === false ? 'Not Available' : 'Confirm Booking'}
           </Button>
           
           <div className="mt-5 text-center flex flex-col items-center gap-2">
@@ -367,13 +405,25 @@ export function BookingWidget({
                 </div>
               </div>
 
-              <div className="pt-5 border-t border-slate-200 flex justify-between items-center">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[12px] font-bold text-slate-400 uppercase tracking-tighter">Total Price</span>
-                  <span className="text-2xl font-extrabold text-[#FF385C]">₹{total.toLocaleString()}</span>
+              <div className="pt-5 border-t border-slate-200 flex flex-col gap-4">
+                <div className="flex justify-between items-center text-[15px] font-medium text-slate-600">
+                  <span>Rental Fees ({days} days)</span>
+                  <span className="font-bold text-slate-900">₹{total.toLocaleString()}</span>
                 </div>
-                <div className="text-right">
-                   <span className="text-[13px] font-bold text-slate-500">₹{pricePerDay.toLocaleString()} × {days}d</span>
+                <div className="flex justify-between items-center text-[15px] font-medium text-slate-600 pb-4 border-b border-dashed border-slate-200">
+                  <span className="flex items-center gap-1.5">Security Deposit <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 font-extrabold uppercase">Held</span></span>
+                  <span className="font-bold text-slate-900">₹{(total * 0.5).toLocaleString()}</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[12px] font-bold text-slate-400 uppercase tracking-tighter text-left">Total Escrow Amount</span>
+                    <span className="text-2xl font-extrabold text-[#FF385C]">₹{(total * 1.5).toLocaleString()}</span>
+                  </div>
+                  <div className="text-right flex flex-col items-end gap-1">
+                     <span className="text-[11px] font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">Secured with Escrow</span>
+                     <span className="text-[12px] font-bold text-slate-500">₹{(total * 0.5).toLocaleString()} returns after trip</span>
+                  </div>
                 </div>
               </div>
             </div>

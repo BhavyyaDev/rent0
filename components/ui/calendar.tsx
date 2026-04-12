@@ -103,14 +103,11 @@ function Calendar({
           defaultClassNames.week_number
         ),
         day: cn(
-          "group/day relative aspect-square h-full w-full rounded-(--cell-radius) p-0 text-center select-none [&:last-child[data-selected=true]_button]:rounded-r-(--cell-radius)",
-          props.showWeekNumber
-            ? "[&:nth-child(2)[data-selected=true]_button]:rounded-l-(--cell-radius)"
-            : "[&:first-child[data-selected=true]_button]:rounded-l-(--cell-radius)",
+          "group/day relative h-full w-full p-0 text-center select-none overflow-visible",
           defaultClassNames.day
         ),
         range_start: cn(
-          "relative isolate z-0 rounded-l-full bg-[#FF385C]/10 after:absolute after:inset-y-0 after:right-0 after:w-1/2 after:bg-[#FF385C]/10 after:-z-10",
+          "relative isolate z-0 rounded-full bg-[#FF385C]/10 after:absolute after:inset-y-0 after:right-0 after:w-1/2 after:bg-[#FF385C]/10 after:-z-10",
           defaultClassNames.range_start
         ),
         range_middle: cn(
@@ -118,7 +115,7 @@ function Calendar({
           defaultClassNames.range_middle
         ),
         range_end: cn(
-          "relative isolate z-0 rounded-r-full bg-[#FF385C]/10 after:absolute after:inset-y-0 after:left-0 after:w-1/2 after:bg-[#FF385C]/10 after:-z-10",
+          "relative isolate z-0 rounded-full bg-[#FF385C]/10 after:absolute after:inset-y-0 after:left-0 after:w-1/2 after:bg-[#FF385C]/10 after:-z-10",
           defaultClassNames.range_end
         ),
         today: cn(

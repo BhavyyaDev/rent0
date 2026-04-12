@@ -32,13 +32,18 @@ model Item {
 }
 
 model Request {
-  id        String   @id @default(cuid())
-  itemId    String
-  renterId  String
-  startDate DateTime
-  endDate   DateTime
-  status    String   @default("pending")
-  createdAt DateTime @default(now())
-  item      Item     @relation(fields: [itemId], references: [id])
-  renter    User     @relation(fields: [renterId], references: [id])
+  id            String   @id @default(cuid())
+  itemId        String
+  renterId      String
+  startDate     DateTime
+  endDate       DateTime
+  status        String   @default("pending")
+  createdAt     DateTime @default(now())
+
+  totalPrice    Float    @default(0)
+  deposit       Float    @default(0)
+  paymentStatus String   @default("pending")
+
+  item          Item     @relation(fields: [itemId], references: [id])
+  renter        User     @relation(fields: [renterId], references: [id])
 }
