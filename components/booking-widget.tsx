@@ -258,8 +258,8 @@ export function BookingWidget({
       </Popover>
 
       {/* Confirmation Layout Block */}
-      {/* Confirmation Layout Block - Step 4 & 5: Only show if dates selected and available */}
-      {datesSelected && isAvailable !== false ? (
+      {/* Confirmation Layout Block - Show if dates selected */}
+      {datesSelected ? (
         <div className="flex flex-col animate-in fade-in zoom-in-95 duration-300 mt-6">
           {isCheckingDates ? (
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center mb-5 animate-pulse">
@@ -276,21 +276,24 @@ export function BookingWidget({
             </div>
           ) : null}
           
-          <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-100/80 mb-6 font-medium">
-            <div className="flex flex-col gap-3.5">
-              <div className="flex justify-between items-center text-slate-600 text-[15px]">
-                <span className="flex items-center gap-1">
-                  ₹{pricePerDay.toLocaleString()}/day × {days} {days === 1 ? 'day' : 'days'}
-                </span>
-                <span className="font-bold text-slate-900">₹{total.toLocaleString()}</span>
-              </div>
-              
-              <div className="flex justify-between items-center text-slate-900 font-extrabold text-lg pt-4 border-t border-slate-200">
-                <span>Total Price</span>
-                <span className="text-[#FF385C]">₹{total.toLocaleString()}</span>
+          {/* Step 5: If unavailable -> hide price details */}
+          {isAvailable !== false && (
+            <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-100/80 mb-6 font-medium">
+              <div className="flex flex-col gap-3.5">
+                <div className="flex justify-between items-center text-slate-600 text-[15px]">
+                  <span className="flex items-center gap-1">
+                    ₹{pricePerDay.toLocaleString()}/day × {days} {days === 1 ? 'day' : 'days'}
+                  </span>
+                  <span className="font-bold text-slate-900">₹{total.toLocaleString()}</span>
+                </div>
+                
+                <div className="flex justify-between items-center text-slate-900 font-extrabold text-lg pt-4 border-t border-slate-200">
+                  <span>Total Price</span>
+                  <span className="text-[#FF385C]">₹{total.toLocaleString()}</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {successMsg && (
             <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-center mt-4 animate-in fade-in duration-300">
