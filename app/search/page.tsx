@@ -130,12 +130,12 @@ export default async function SearchPage(props: { searchParams?: Promise<{ [key:
         </div>
       </div>
 
-      <div className="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 py-10">
+      <div className="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 py-20">
         <SearchFilters />
         
         {items.length === 0 ? (
           <div className="flex flex-col mt-6 gap-12">
-            <div className="flex flex-col items-center justify-center p-8 sm:p-12 text-center bg-white rounded-[40px] border border-slate-100 shadow-sm">
+            <div className="flex flex-col items-center justify-center p-8 sm:p-20 text-center bg-white rounded-[40px] border border-slate-200 shadow-sm">
               <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
                 <SearchIcon className="w-10 h-10 text-slate-300" />
               </div>
@@ -161,7 +161,7 @@ export default async function SearchPage(props: { searchParams?: Promise<{ [key:
             <div className="flex flex-col gap-6 mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
                <h3 className="text-[20px] font-extrabold text-[#222222] px-2">Popular Categories</h3>
                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
-                  <Link href="/search?category=camera" className="group rounded-[24px] bg-white border border-slate-100 p-6 flex flex-col gap-4 text-left shadow-sm hover:shadow-xl hover:border-slate-200 transition-all active:scale-95">
+                  <Link href="/search?category=camera" className="group rounded-[24px] bg-white border border-slate-200 p-6 flex flex-col gap-4 text-left shadow-sm hover:shadow-xl hover:border-slate-300 transition-all active:scale-95">
                     <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center group-hover:scale-110 transition-transform">
                        <Camera className="w-6 h-6 text-slate-700" />
                     </div>
@@ -230,7 +230,7 @@ export default async function SearchPage(props: { searchParams?: Promise<{ [key:
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-8 gap-y-14 mb-20 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 mb-20 animate-in fade-in slide-in-from-bottom-2 duration-500">
               {items.map((item) => (
                 <ItemCard key={item.id} item={item} />
               ))}

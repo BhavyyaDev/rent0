@@ -38,7 +38,7 @@ export default async function ExplorePage(props: {
   return (
     <div className="w-full min-h-[calc(100vh-4rem)] bg-[#F8FAFC]">
       {/* Header wrapper for background fill */}
-      <div className="bg-white border-b border-slate-200/60 pt-16 pb-16">
+      <div className="bg-white border-b border-slate-200/60 py-20">
         <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20">
           <div className="flex flex-col gap-4 text-left">
             <h1 className="text-[40px] md:text-[56px] font-black text-slate-950 tracking-tighter leading-none">
@@ -51,7 +51,7 @@ export default async function ExplorePage(props: {
         </div>
       </div>
 
-      <div className="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 py-12">
+      <div className="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 py-20">
         {/* Sorting Controls */}
         <div className="mb-12">
           <SortControl />
@@ -59,7 +59,7 @@ export default async function ExplorePage(props: {
 
         {items.length === 0 ? (
           <div className="flex flex-col gap-16 mt-8">
-            <div className="flex flex-col items-center justify-center py-32 bg-white rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
+            <div className="flex flex-col items-center justify-center py-32 bg-white rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-slate-950/10" />
               <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-8">
                 <SearchIcon className="w-12 h-12 text-slate-300" />
@@ -78,7 +78,7 @@ export default async function ExplorePage(props: {
             <div className="flex flex-col gap-5">
               <h3 className="text-[22px] font-bold text-slate-900 px-2">Popular Categories</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
-                  <Link href="/search?category=camera" className="group rounded-[24px] bg-white border border-slate-100 p-6 flex flex-col gap-4 shadow-sm hover:shadow-xl hover:border-slate-200 transition-all active:scale-95">
+                  <Link href="/search?category=camera" className="group rounded-2xl bg-white border border-slate-200 p-6 flex flex-col gap-4 shadow-sm hover:shadow-md hover:border-slate-300 transition-all active:scale-95 hover:-translate-y-0.5 duration-200">
                     <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mx-auto sm:mx-0 group-hover:scale-110 transition-transform">
                        <Camera className="w-6 h-6 text-slate-700" />
                     </div>
@@ -118,7 +118,7 @@ export default async function ExplorePage(props: {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-8 gap-y-12 animate-in fade-in slide-in-from-bottom-3 duration-700">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 animate-in fade-in slide-in-from-bottom-3 duration-700">
             {items.map((item) => (
               <ItemCard key={item.id} item={item} />
             ))}

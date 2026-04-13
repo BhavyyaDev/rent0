@@ -63,7 +63,7 @@ export default async function ItemDetailPage({
         </div>
       </div>
 
-      <div className="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 py-10">
+      <div className="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 py-20">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 lg:gap-24">
           
           {/* 2. LEFT COLUMN: Detailed Info */}
@@ -80,7 +80,7 @@ export default async function ItemDetailPage({
               </div>
 
               {/* Owner Micro-Profile */}
-              <div className="flex items-center gap-5 py-10 border-y-2 border-slate-100/80">
+              <div className="flex items-center gap-5 py-10 border-y-2 border-slate-200">
                 <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center shadow-xl transform group-hover:rotate-6 transition-transform">
                   <span className="text-white font-black text-2xl">{item.owner?.name?.charAt(0).toUpperCase() || 'U'}</span>
                 </div>

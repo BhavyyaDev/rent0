@@ -37,7 +37,7 @@ function CategoryList() {
             className={`flex-shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-full border shadow-sm font-semibold transition-all active:scale-95 duration-200 outline-none ${
               isSelected
                 ? 'bg-slate-900 border-slate-900 text-white shadow-md'
-                : 'bg-white border-slate-200/80 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
             }`}
           >
             <cat.icon className={`w-4 h-4 ${isSelected ? 'text-emerald-400' : 'text-slate-500'}`} />

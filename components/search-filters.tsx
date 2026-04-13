@@ -120,7 +120,7 @@ export function SearchFilters() {
   const hasActiveFilters = sort !== 'newest' || priceRange[0] !== 0 || priceRange[1] !== 2000 || !!dateRange;
 
   return (
-    <div className="flex flex-col gap-6 p-6 bg-white rounded-3xl border border-slate-100 shadow-sm mb-8">
+    <div className="flex flex-col gap-6 p-8 bg-white rounded-2xl border border-slate-200 shadow-sm mb-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="w-5 h-5 text-slate-900" />
@@ -130,7 +130,7 @@ export function SearchFilters() {
               variant="ghost" 
               size="sm" 
               onClick={clearFilters}
-              className="h-7 px-2 text-xs font-bold text-slate-500 hover:text-slate-900 ml-2 rounded-full"
+              className="h-7 px-2 text-xs font-bold text-slate-500 hover:text-slate-900 ml-2 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50"
             >
               Clear all
             </Button>
@@ -147,7 +147,7 @@ export function SearchFilters() {
                   id="date"
                   variant={"outline"}
                   className={cn(
-                    "w-[240px] justify-start text-left font-bold rounded-xl border-slate-200 bg-slate-50/50 h-10 px-3",
+                    "w-[240px] justify-start text-left font-bold rounded-full border-slate-200 bg-slate-50/50 h-10 px-4",
                     !dateRange && "text-slate-400 font-medium"
                   )}
                 >
@@ -166,7 +166,7 @@ export function SearchFilters() {
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 rounded-3xl overflow-hidden shadow-2xl border-slate-100" align="start">
+              <PopoverContent className="w-auto p-0 rounded-2xl overflow-hidden shadow-2xl border border-slate-200" align="start">
                 <Calendar
                   initialFocus
                   mode="range"
@@ -179,7 +179,7 @@ export function SearchFilters() {
             </Popover>
           </div>
 
-          <div className="h-10 w-px bg-slate-100 hidden lg:block" />
+          <div className="h-10 w-px bg-slate-200 hidden lg:block" />
 
           {/* Price Range Slider */}
           <div className="flex flex-col gap-3 min-w-[240px]">
@@ -196,16 +196,16 @@ export function SearchFilters() {
             />
           </div>
 
-          <div className="h-10 w-px bg-slate-100 hidden md:block" />
+          <div className="h-10 w-px bg-slate-200 hidden md:block" />
 
           {/* Sort Dropdown */}
           <div className="flex items-center gap-3">
             <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">Sort By</Label>
             <Select value={sort} onValueChange={handleSortChange}>
-              <SelectTrigger className="w-[180px] rounded-xl border-slate-200 font-bold bg-slate-50/50">
+              <SelectTrigger className="w-[180px] rounded-full border-slate-200 font-bold bg-slate-50/50">
                 <SelectValue placeholder="Sort order" />
               </SelectTrigger>
-              <SelectContent className="rounded-xl border-slate-100 shadow-xl">
+              <SelectContent className="rounded-2xl border border-slate-200 shadow-xl">
                 <SelectItem value="newest">Newest First</SelectItem>
                 <SelectItem value="price_asc">Price: Low to High</SelectItem>
                 <SelectItem value="price_desc">Price: High to Low</SelectItem>

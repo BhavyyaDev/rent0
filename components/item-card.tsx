@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface Item {
   id: string;
@@ -44,9 +45,12 @@ export function ItemCard({ item, dateFilterActive }: { item: Item, dateFilterAct
 
   return (
     <Link href={`/items/${item.id}`} className="group block focus:outline-none cursor-pointer active:scale-95 transition-all duration-200 ease-in-out">
-      <div className={`flex flex-col gap-1 transition-all duration-300 ease-in-out group-hover:-translate-y-0.5 ${isDimmed ? 'opacity-40 grayscale-[0.8]' : ''}`}>
+      <div className={cn(
+        "flex flex-col gap-1 transition-all duration-200 ease-in-out bg-white p-3 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5",
+        isDimmed && "opacity-40 grayscale-[0.8]"
+      )}>
         {/* Image Section */}
-        <div className="w-full aspect-[20/19] relative overflow-hidden rounded-2xl bg-white shadow-sm group-hover:shadow-md transition-all duration-200 ease-in-out mb-2 border border-slate-100/50">
+        <div className="w-full aspect-[20/19] relative overflow-hidden rounded-xl bg-[#F7F7F7] shadow-inner mb-3 border border-slate-200/50">
           {isDimmed && (
             <div className="absolute inset-0 bg-slate-900/10 z-10 flex items-center justify-center backdrop-blur-[1px] transition-all">
               <span className="bg-slate-900/90 text-white text-[11px] font-extrabold px-3.5 py-1.5 rounded-full shadow-lg uppercase tracking-wider">
@@ -79,7 +83,7 @@ export function ItemCard({ item, dateFilterActive }: { item: Item, dateFilterAct
         </div>
 
         {/* Content Section */}
-        <div className="flex flex-col px-0.5">
+        <div className="flex flex-col px-0.5 pb-1">
           <div className="flex justify-between items-start gap-2">
             <span className="font-semibold text-[13px] text-slate-400 uppercase tracking-widest leading-none">
               {item.category && item.category !== 'Other' ? item.category.toLowerCase() : 'Equipment'}

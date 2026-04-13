@@ -212,7 +212,7 @@ export function BookingWidget({
 
   if (successMsg) {
     return (
-      <div className="flex flex-col items-center text-center w-full mt-2 bg-white rounded-3xl shadow-sm border border-slate-100 p-8 py-12 animate-in fade-in zoom-in duration-500">
+      <div className="flex flex-col items-center text-center w-full mt-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-8 py-12 animate-in fade-in zoom-in duration-500">
         <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-emerald-100">
           <CheckCircle2 className="w-10 h-10 text-emerald-500" />
         </div>
@@ -238,7 +238,7 @@ export function BookingWidget({
   }
 
   return (
-    <div className="flex flex-col w-full mt-2 bg-white rounded-3xl pb-2 shadow-sm border border-slate-100 p-6">
+    <div className="flex flex-col w-full mt-2 bg-white rounded-2xl pb-2 shadow-sm border border-slate-200 p-6">
        
       <div className="mb-8 flex justify-between items-baseline">
          <span className="text-3xl font-black text-slate-950 tracking-tighter">₹{pricePerDay.toLocaleString()} <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">/ day</span></span>
@@ -337,7 +337,7 @@ export function BookingWidget({
           ) : null}
           {/* Step 3: Show price breakdown only after availability success */}
           {isVerified && isAvailable === true && !isCheckingDates && (
-            <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-100/80 mb-6 font-medium animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="bg-slate-50/50 rounded-xl p-5 border border-slate-200/60 mb-6 font-medium animate-in fade-in slide-in-from-bottom-2 duration-500">
               <div className="flex flex-col gap-3.5">
                 <div className="flex justify-between items-center text-slate-600 text-[15px]">
                   <span className="flex items-center gap-1">
@@ -375,8 +375,8 @@ export function BookingWidget({
             </div>
           )}
           {errorMsg && (
-            <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-center mt-4 animate-in fade-in duration-300">
-              <p className="text-red-700 font-bold text-[14px]">{errorMsg}</p>
+            <div className="bg-red-50 border-2 border-red-100 rounded-2xl p-4 text-center mt-6 animate-in fade-in slide-in-from-top-1 duration-300">
+              <p className="text-red-700 font-extrabold text-[15px] tracking-tight">{errorMsg}</p>
             </div>
           )}
 
@@ -404,21 +404,21 @@ export function BookingWidget({
             ) : isPending ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Processing booking...
+                Processing...
               </span>
             ) : !datesSelected ? (
-              'Select your rental dates'
+              'Select dates'
             ) : isCheckingDates ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Validating your dates...
+                Checking...
               </span>
             ) : isVerified && isAvailable === true ? (
-              'Confirm and Book Now'
+              'Confirm booking'
             ) : isAvailable === false ? (
               'Dates are taken'
             ) : (
-              'Check Availability'
+              'Check availability'
             )}
           </Button>
           
@@ -501,8 +501,8 @@ export function BookingWidget({
               >
                 {isPending ? (
                   <span className="flex items-center gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Confirming booking...
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    Processing...
                   </span>
                 ) : "Confirm & Send Request"}
               </Button>
@@ -510,7 +510,7 @@ export function BookingWidget({
                 variant="ghost" 
                 size="lg" 
                 onClick={() => setIsConfirmModalOpen(false)}
-                className="w-full h-12 rounded-2xl text-slate-500 font-bold hover:bg-slate-50 transition-colors"
+                className="w-full h-12 rounded-2xl text-slate-400 font-bold hover:bg-slate-50 transition-colors"
               >
                 Cancel
               </Button>

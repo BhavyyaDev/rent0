@@ -86,7 +86,7 @@ export default async function Home() {
       <section className="relative pt-24 pb-32 overflow-hidden bg-white">
         <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-100 text-slate-600 text-sm font-black mb-8 animate-fade-in shadow-sm">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-600 text-sm font-black mb-8 animate-fade-in shadow-sm">
               <ShieldCheck className="w-4 h-4 text-emerald-500" />
               <span>Trusted by 10,000+ creators</span>
             </div>
@@ -105,7 +105,7 @@ export default async function Home() {
 
       {/* 1. Recently Added Section */}
       {recentlyAdded.length > 0 && (
-        <section className="py-32 bg-[#F8FAFC]">
+        <section className="py-20 bg-[#F8FAFC]">
           <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20">
             <div className="flex items-center justify-between mb-12">
               <div className="flex items-center gap-4">
@@ -128,7 +128,7 @@ export default async function Home() {
       )}
 
       {/* 2. Category Section */}
-      <section className="py-32 bg-white">
+      <section className="py-20 bg-white">
         <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20">
           <div className="flex flex-col gap-4 mb-16 text-center max-w-2xl mx-auto">
             <h2 className="text-[32px] md:text-[48px] font-black tracking-tighter text-slate-950 leading-none">Browse Categories</h2>
@@ -137,7 +137,7 @@ export default async function Home() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {categories.map((cat) => (
               <Link key={cat.name} href={`/search?category=${cat.name.toLowerCase()}`}>
-                <div className="group bg-[#F8FAFC] p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 ease-in-out hover:-translate-y-0.5 active:scale-95">
+                <div className="group bg-[#F8FAFC] p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 ease-in-out hover:-translate-y-0.5 active:scale-95">
                   <div className={`w-14 h-14 ${cat.color} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200`}>
                     <cat.icon className="w-7 h-7" />
                   </div>
@@ -152,7 +152,7 @@ export default async function Home() {
 
       {/* 3. Popular Gear Section */}
       {popularItems.length > 0 && (
-        <section className="py-32 bg-[#F8FAFC]">
+        <section className="py-20 bg-[#F8FAFC]">
           <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20">
             <div className="flex items-center justify-between mb-12">
               <div className="flex items-center gap-4">
@@ -173,7 +173,7 @@ export default async function Home() {
       )}
 
       {/* How it Works Section */}
-      <section className="py-32 bg-white">
+      <section className="py-20 bg-white">
         <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20">
           <div className="text-center max-w-3xl mx-auto mb-20 flex flex-col gap-4">
             <h2 className="text-[40px] md:text-[56px] font-black tracking-tighter text-slate-950 leading-none">How it Works</h2>
@@ -181,10 +181,10 @@ export default async function Home() {
               Our platform makes it easy and safe to rent professional equipment from your local community.
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-12 relative">
+          <div className="grid md:grid-cols-3 gap-8 relative">
             {steps.map((step, idx) => (
               <div key={idx} className="flex flex-col items-center text-center relative z-10 group">
-                <div className="w-24 h-24 bg-white border border-slate-100 rounded-2xl flex items-center justify-center mb-8 shadow-sm transition-all duration-200 ease-in-out group-hover:shadow-md group-hover:-translate-y-0.5">
+                <div className="w-24 h-24 bg-white border border-slate-200 rounded-2xl flex items-center justify-center mb-8 shadow-sm transition-all duration-200 ease-in-out group-hover:shadow-md group-hover:-translate-y-0.5">
                   <step.icon className="w-10 h-10 text-slate-950" />
                 </div>
                 <h3 className="text-2xl font-black text-slate-950 mb-4">{step.title}</h3>

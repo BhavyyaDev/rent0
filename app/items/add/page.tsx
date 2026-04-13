@@ -46,9 +46,9 @@ export default function AddItemPage() {
         <Card className="rounded-[32px] border border-slate-200/60 shadow-sm bg-white overflow-hidden">
           <CardContent className="p-8 sm:p-10">
             {state?.error && (
-              <div className="bg-red-50 text-red-600 p-4 rounded-2xl flex items-start gap-3 mb-6 border border-red-100">
-                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                <p className="text-sm font-medium">{state.error}</p>
+              <div className="bg-red-50 text-red-700 p-5 rounded-2xl flex items-start gap-4 mb-8 border-2 border-red-100 animate-in fade-in slide-in-from-top-2 duration-300">
+                <AlertCircle className="w-6 h-6 shrink-0 mt-0.5" />
+                <p className="font-bold text-[15px] leading-relaxed">{state.error}</p>
               </div>
             )}
 

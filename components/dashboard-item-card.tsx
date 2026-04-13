@@ -24,7 +24,7 @@ export function DashboardItemCard({ item }: { item: Item }) {
   };
 
   return (
-    <div className="group block relative bg-white rounded-2xl border border-slate-100/80 p-3 transition-all duration-200 ease-in-out hover:shadow-md hover:-translate-y-0.5 active:scale-95">
+    <div className="group block relative bg-white rounded-2xl border border-slate-200 p-3 transition-all duration-200 ease-in-out hover:shadow-md hover:-translate-y-0.5 active:scale-95">
       <div className="flex flex-col gap-4">
         {/* Image Section */}
         <div className="w-full aspect-[4/3] relative overflow-hidden rounded-xl bg-[#F7F7F7] shadow-inner">

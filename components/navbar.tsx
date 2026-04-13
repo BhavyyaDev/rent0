@@ -9,8 +9,8 @@ export function Navbar({ role = 'renter' }: { role?: string }) {
   const { isSignedIn, isLoaded } = useUser();
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl border-b border-slate-200/50">
-      <div className="container mx-auto px-4 md:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <nav className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-xl border-b border-slate-200">
+      <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 h-16 flex items-center justify-between">
         <Link href="/" className="font-extrabold text-2xl tracking-tighter text-slate-900 hover:text-slate-800 transition-colors">
           RentO
         </Link>

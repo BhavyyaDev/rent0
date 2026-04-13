@@ -117,16 +117,16 @@ export function RequestActionButtons({ requestId, status, isOwner = false }: Req
               size="lg" 
               onClick={() => setIsAcceptOpen(true)}
               disabled={isPending}
-              className="flex-1 rounded-full h-12 font-black text-[13px] bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all duration-200 ease-in-out active:scale-95"
+              className="flex-1 rounded-full h-12 font-black text-[13px] bg-slate-950 text-white shadow-md transition-all duration-200 ease-in-out active:scale-95"
             >
               Approve Rental
             </Button>
             <Button 
-              size="lg" 
-              variant="outline"
+              size="sm" 
+              variant="ghost"
               onClick={() => setIsRejectOpen(true)}
               disabled={isPending}
-              className="px-6 rounded-full h-12 font-black text-[13px] border-2 border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-red-600 hover:border-red-100 transition-all duration-200 ease-in-out active:scale-95"
+              className="px-4 rounded-full h-12 font-bold text-[13px] text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200 ease-in-out active:scale-95"
             >
               Decline
             </Button>
@@ -140,7 +140,7 @@ export function RequestActionButtons({ requestId, status, isOwner = false }: Req
             disabled={isPending}
             className="w-full rounded-full h-12 font-black text-[13px] bg-slate-950 text-white hover:bg-black shadow-md transition-all duration-200 ease-in-out active:scale-95"
           >
-            Mark as Handed Over
+            {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Mark as Handed Over"}
           </Button>
         )}
 

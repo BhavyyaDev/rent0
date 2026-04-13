@@ -79,7 +79,7 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20">
       {/* Header wrapper for background fill */}
-      <div className="bg-white border-b border-slate-200/60 pt-16 pb-16">
+      <div className="bg-white border-b border-slate-200/60 py-20">
         <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-10">
             <div className="flex flex-col gap-2">
@@ -101,9 +101,9 @@ export default async function DashboardPage() {
           </div>
 
           {/* Stats Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
             {/* Total Listings Card */}
-            <div className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.04)] flex items-center gap-5">
+            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm flex items-center gap-5 hover:shadow-md transition-all duration-200">
               <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
                 <Package className="w-6 h-6 text-blue-600" />
               </div>
@@ -142,7 +142,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 mt-16 flex flex-col gap-24">
+      <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 mt-20 flex flex-col gap-24">
 
         {/* --- LENDER VIEW (OWNER ROLE) --- */}
         {role === 'lender' && (
@@ -214,7 +214,7 @@ export default async function DashboardPage() {
 
             {/* User Inventory Grid */}
             {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-2xl border border-slate-100 shadow-sm mt-4 relative overflow-hidden">
+              <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-2xl border border-slate-200 shadow-sm mt-4 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500/20" />
                 <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-8">
                   <ShoppingBag className="w-12 h-12 text-emerald-500" />
@@ -234,7 +234,7 @@ export default async function DashboardPage() {
             ) : (
               <div>
                 <h3 className="text-[20px] font-extrabold text-[#222222] mb-6">Your Inventory</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-8 gap-y-12">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
                   {items.map((item) => (
                     <DashboardItemCard key={item.id} item={item} />
                   ))}
@@ -325,7 +325,7 @@ export default async function DashboardPage() {
                 </div>
               </div>
             ) : (
-            <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-2xl border border-slate-100 shadow-sm mt-4 relative overflow-hidden">
+            <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-2xl border border-slate-200 shadow-sm mt-4 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-slate-950/10" />
                 <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-8">
                   <Search className="w-12 h-12 text-slate-300" />
