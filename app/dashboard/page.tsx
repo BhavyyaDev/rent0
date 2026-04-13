@@ -5,7 +5,7 @@ import { DashboardItemCard } from '@/components/dashboard-item-card';
 import { RequestActionButtons } from '@/components/request-action-buttons';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { PlusCircle, ShoppingBag, Package, Activity, Banknote, Search, XCircle } from 'lucide-react';
+import { PlusCircle, ShoppingBag, Package, Activity, Banknote, Search, XCircle, ShieldCheck, Tag, Calendar } from 'lucide-react';
 import { Item } from '@/components/item-card';
 import { RoleToggle } from '@/components/role-toggle';
 import { deleteRequest, syncRequestStatuses } from '@/app/actions/request';

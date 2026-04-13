@@ -1,5 +1,6 @@
 import { ItemCard, Item } from '@/components/item-card';
 import { Package, Camera, Speaker, Gamepad2, Sparkles, Search as SearchIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { SortControl } from '@/components/sort-control';
