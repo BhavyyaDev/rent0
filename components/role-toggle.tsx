@@ -14,21 +14,32 @@ export function RoleToggle({ currentRole }: { currentRole: string }) {
     });
   };
 
-  const isLender = currentRole === 'lender';
-
   return (
-    <Button 
-      variant="outline"
-      onClick={handleToggle}
-      disabled={isPending}
-      className={`rounded-full h-12 px-6 font-bold flex items-center gap-2 border-slate-200 transition-all shadow-sm ${
-        isLender 
-          ? 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 hover:text-emerald-800' 
-          : 'text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800'
-      }`}
-    >
-      <RefreshCcw className={`w-4 h-4 ${isPending ? 'animate-spin' : ''}`} />
-      {isPending ? 'Switching View...' : `Switch to ${isLender ? 'Renter' : 'Lender'} View`}
-    </Button>
+    <div className="flex p-1.5 bg-slate-100 rounded-2xl w-fit shadow-inner border border-slate-200/50">
+      <button
+        onClick={() => handleToggle('renter')}
+        disabled={isPending}
+        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all duration-300 ease-in-out active:scale-[0.97] ${
+          currentRole === 'renter'
+            ? 'bg-slate-950 text-white shadow-xl'
+            : 'text-slate-500 hover:text-slate-700'
+        }`}
+      >
+        <ShoppingBag className="w-4 h-4" />
+        Renting
+      </button>
+      <button
+        onClick={() => handleToggle('lender')}
+        disabled={isPending}
+        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all duration-300 ease-in-out active:scale-[0.97] ${
+          currentRole === 'lender'
+            ? 'bg-slate-950 text-white shadow-xl'
+            : 'text-slate-500 hover:text-slate-700'
+        }`}
+      >
+        <Package className="w-4 h-4" />
+        Lending
+      </button>
+    </div>
   );
 }

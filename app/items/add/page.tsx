@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { createItem } from '@/app/actions/item';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 
@@ -126,9 +126,14 @@ export default function AddItemPage() {
                 <Button
                   type="submit"
                   disabled={pending}
-                  className="w-full rounded-full h-14 text-lg font-bold shadow-md hover:shadow-lg transition-all bg-[#10b981] text-white hover:bg-[#059669]"
+                  className="w-full rounded-full h-14 text-lg font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98] bg-[#10b981] text-white hover:bg-[#059669] flex items-center justify-center gap-2"
                 >
-                  {pending ? 'Publishing...' : 'Publish Listing'}
+                  {pending ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Publishing...
+                    </>
+                  ) : 'Publish Listing'}
                 </Button>
               </div>
             </form>

@@ -21,6 +21,9 @@ export default async function DashboardPage() {
     redirect('/sign-in');
   }
 
+  // Ensure all request statuses are current based on the clock
+  await syncRequestStatuses();
+
   // Get global user details and read Postgres role string
   const currentUser = await (prisma as any).user.findUnique({ where: { id: userId } });
   const role = currentUser?.role || 'renter';
@@ -76,21 +79,21 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20">
       {/* Header wrapper for background fill */}
-      <div className="bg-white border-b border-slate-200/60 pt-10 pb-12">
+      <div className="bg-white border-b border-slate-200/60 pt-16 pb-16">
         <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <h1 className="text-[32px] md:text-[40px] font-extrabold tracking-tight text-[#222222]">Dashboard Overview</h1>
-              <p className="text-[17px] text-[#717171] mt-2 font-medium">Your complete marketplace summary.</p>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-10">
+            <div className="flex flex-col gap-2">
+              <h1 className="text-[36px] md:text-[52px] font-black tracking-tighter text-slate-950 leading-none">Dashboard</h1>
+              <p className="text-xl text-slate-500 font-bold max-w-2xl leading-relaxed">Your complete marketplace summary and inventory management.</p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <RoleToggle currentRole={role} />
 
               {role === 'lender' && (
                 <Link href="/items/add">
-                  <Button className="rounded-full h-12 px-7 text-base font-bold shadow-md hover:shadow-lg transition-all gap-2 bg-slate-900 hover:bg-slate-800 text-white active:scale-95">
-                    <PlusCircle className="w-5 h-5" /> Add New Item
+                  <Button className="rounded-full h-15 px-8 text-base font-black shadow-md transition-all duration-200 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95">
+                    <PlusCircle className="w-5 h-5" /> List New Gear
                   </Button>
                 </Link>
               )}
@@ -105,8 +108,8 @@ export default async function DashboardPage() {
                 <Package className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-[#717171] font-semibold text-sm uppercase tracking-wider mb-1">Total Listings</p>
-                <p className="text-3xl font-extrabold text-[#222222]">{totalListings}</p>
+                <p className="text-slate-400 font-bold text-[11px] uppercase tracking-[0.2em] mb-1">Total Listings</p>
+                <p className="text-4xl font-black text-slate-950">{totalListings}</p>
               </div>
             </div>
 
@@ -116,8 +119,8 @@ export default async function DashboardPage() {
                 <Activity className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="text-[#717171] font-semibold text-sm uppercase tracking-wider mb-1">Active Listings</p>
-                <p className="text-3xl font-extrabold text-[#222222]">{activeListings}</p>
+                <p className="text-slate-400 font-bold text-[11px] uppercase tracking-[0.2em] mb-1">Active Listings</p>
+                <p className="text-4xl font-black text-slate-950">{activeListings}</p>
               </div>
             </div>
 
@@ -127,10 +130,10 @@ export default async function DashboardPage() {
                 <Banknote className="w-6 h-6 text-emerald-600" />
               </div>
               <div>
-                <p className="text-[#717171] font-semibold text-sm uppercase tracking-wider mb-1">Estimated Value</p>
+                <p className="text-slate-400 font-bold text-[11px] uppercase tracking-[0.2em] mb-1">Estimated Value</p>
                 <div className="flex items-baseline gap-1">
-                  <p className="text-3xl font-extrabold text-[#222222]">₹{estimatedValue.toLocaleString()}</p>
-                  <span className="text-[#717171] font-medium text-sm">/mo</span>
+                  <p className="text-4xl font-black text-slate-950">₹{estimatedValue.toLocaleString()}</p>
+                  <span className="text-slate-500 font-bold text-sm">/mo</span>
                 </div>
               </div>
             </div>
@@ -144,9 +147,9 @@ export default async function DashboardPage() {
         {/* --- LENDER VIEW (OWNER ROLE) --- */}
         {role === 'lender' && (
           <section className="flex flex-col gap-10">
-            <div className="border-b border-slate-200 pb-5">
-              <h2 className="text-[28px] font-extrabold text-[#222222]">Lender Dashboard</h2>
-              <p className="text-[#717171] font-medium mt-1">Manage your inventory and fulfill incoming rental requests.</p>
+            <div className="border-b-2 border-slate-200 pb-6 text-left">
+              <h2 className="text-[32px] font-black text-slate-950 tracking-tighter">Lender Dashboard</h2>
+              <p className="text-slate-500 font-bold mt-2">Manage your inventory and fulfill incoming rental requests.</p>
             </div>
 
             {/* Incoming Requests Section */}
@@ -156,12 +159,12 @@ export default async function DashboardPage() {
                 <div className="bg-white rounded-[24px] border border-slate-200 overflow-hidden shadow-sm overflow-x-auto">
                   <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200 text-[13px] tracking-widest text-slate-500 uppercase font-bold">
-                        <th className="p-5 font-bold">Item</th>
-                        <th className="p-5 font-bold">Renter</th>
-                        <th className="p-5 font-bold">Dates</th>
-                        <th className="p-5 font-bold text-right">Earnings</th>
-                        <th className="p-5 font-bold">Status</th>
+                      <tr className="bg-slate-50/50 border-b-2 border-slate-200 text-[11px] tracking-[0.2em] text-slate-400 uppercase font-black">
+                        <th className="p-6">ITEM</th>
+                        <th className="p-6">RENTER</th>
+                        <th className="p-6">DATES</th>
+                        <th className="p-6 text-right">EARNINGS</th>
+                        <th className="p-6">STATUS</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -172,8 +175,15 @@ export default async function DashboardPage() {
                             <div className="text-sm font-medium text-emerald-600">₹{req.item.pricePerDay}/day</div>
                           </td>
                           <td className="p-5">
-                            <div className="font-bold text-slate-900">{req.renter.name || 'Verified Renter'}</div>
-                            <div className="text-sm font-medium text-slate-500">{req.renter.email}</div>
+                            <div className="flex items-center gap-2">
+                              <div className="font-bold text-slate-900">{req.renter.name || 'Verified Renter'}</div>
+                              <ShieldCheck className="w-4 h-4 text-emerald-500 fill-emerald-50" />
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <div className="text-[12px] font-bold text-slate-500">{req.renter.email}</div>
+                              <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                              <span className="text-[11px] font-bold text-amber-600">Trust {req.renter.trustScore}%</span>
+                            </div>
                           </td>
                           <td className="p-5 text-slate-600 font-bold whitespace-nowrap text-sm">
                             {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
@@ -187,7 +197,7 @@ export default async function DashboardPage() {
                             ) : null}
                           </td>
                           <td className="p-5 w-40">
-                            <RequestActionButtons requestId={req.id} status={req.status} />
+                            <RequestActionButtons requestId={req.id} status={req.status} isOwner={true} />
                             {req.paymentStatus === 'released' && (
                               <div className="mt-2 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 text-center">
                                 Payment released to owner
@@ -204,18 +214,19 @@ export default async function DashboardPage() {
 
             {/* User Inventory Grid */}
             {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-[40px] border border-slate-100 shadow-sm mt-2">
-                <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-                  <ShoppingBag className="w-12 h-12 text-slate-300" />
+              <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-2xl border border-slate-100 shadow-sm mt-4 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500/20" />
+                <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-8">
+                  <ShoppingBag className="w-12 h-12 text-emerald-500" />
                 </div>
-                <h3 className="text-[26px] font-extrabold text-[#222222] mb-3">
-                  You haven't listed anything yet
+                <h3 className="text-3xl font-black text-slate-950 mb-3 tracking-tighter">
+                  Start earning from your gear
                 </h3>
-                <p className="text-[17px] text-[#717171] max-w-sm mx-auto mb-10 font-medium leading-relaxed">
-                  Start earning by listing items you don't use every day. Your gear could be making someone else's project possible.
+                <p className="text-[17px] text-slate-500 max-w-sm mx-auto mb-10 font-bold leading-relaxed">
+                  Turn your idle equipment into professional earnings. List your first item to join the marketplace.
                 </p>
                 <Link href="/items/add">
-                  <Button className="rounded-full h-14 px-10 text-lg font-bold shadow-xl shadow-slate-200 transition-all active:scale-95 bg-slate-900 text-white hover:bg-slate-800">
+                  <Button className="rounded-full h-15 px-10 text-lg font-black shadow-md bg-emerald-600 hover:bg-emerald-700 text-white transition-all active:scale-95 duration-200">
                     List your first item
                   </Button>
                 </Link>
@@ -244,15 +255,15 @@ export default async function DashboardPage() {
 
             {outgoingRequests && outgoingRequests.length > 0 ? (
               <div>
-                <h3 className="text-[20px] font-extrabold text-[#222222] mb-5">My Requests</h3>
+                <h3 className="text-[20px] font-black text-slate-950 mb-6">My Requests</h3>
                 <div className="bg-white rounded-[24px] border border-slate-200 overflow-hidden shadow-sm overflow-x-auto">
                   <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200 text-[13px] tracking-widest text-slate-500 uppercase font-bold">
-                        <th className="p-5 font-bold">Item</th>
-                        <th className="p-5 font-bold">Owner</th>
-                        <th className="p-5 font-bold">Dates</th>
-                        <th className="p-5 font-bold">Status</th>
+                      <tr className="bg-slate-50 border-b-2 border-slate-200 text-[11px] tracking-[0.2em] text-slate-400 uppercase font-black">
+                        <th className="p-6">ITEM</th>
+                        <th className="p-6">OWNER</th>
+                        <th className="p-6">DATES</th>
+                        <th className="p-6">STATUS</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -263,7 +274,11 @@ export default async function DashboardPage() {
                             <div className="text-[13px] font-bold text-emerald-600 mt-0.5">₹{req.item.pricePerDay}/day</div>
                           </td>
                           <td className="p-5">
-                            <div className="font-bold text-slate-900 text-[14px]">{req.item.owner?.name || 'Verified Owner'}</div>
+                            <div className="flex items-center gap-2">
+                              <div className="font-bold text-slate-900 text-[14px]">{req.item.owner?.name || 'Verified Owner'}</div>
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 fill-emerald-50" />
+                            </div>
+                            <div className="text-[11px] font-bold text-amber-600 mt-0.5">Trust {req.item.owner?.trustScore}%</div>
                           </td>
                           <td className="p-5 text-slate-600 font-bold whitespace-nowrap text-[14px]">
                             {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
@@ -279,42 +294,12 @@ export default async function DashboardPage() {
                           </td>
                           <td className="p-5 w-60">
                             <div className="flex items-center gap-3">
-                              {req.status === 'completed' && (
-                                <div className="flex flex-col gap-1">
-                                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-blue-100 text-blue-700 border border-blue-200 shadow-sm whitespace-nowrap w-fit">
-                                    Completed
-                                  </span>
-                                  <span className="text-[11px] text-blue-500 font-bold ml-1">Gear returned successfully ✨</span>
-                                </div>
-                              )}
-                              {req.status === 'pending' && (
-                                <div className="flex flex-col gap-1">
-                                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm whitespace-nowrap w-fit">
-                                    Waiting for owner approval
-                                  </span>
-                                  <span className="text-[11px] text-slate-500 font-bold ml-1">Owner will respond soon</span>
-                                </div>
-                              )}
-                              {req.status === 'accepted' && (
-                                <div className="flex flex-col gap-1">
-                                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm whitespace-nowrap w-fit">
-                                    Booking confirmed
-                                  </span>
-                                  <span className="text-[11px] text-emerald-600 font-bold ml-1">Coordinate pickup with owner</span>
-                                  {req.paymentStatus === 'held' && (
-                                    <div className="mt-2 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 flex items-center gap-1.5">
-                                      <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                                      Deposit secured
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                              {req.status === 'rejected' && (
-                                <div className="flex flex-col gap-1">
-                                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm whitespace-nowrap w-fit">
-                                    Request declined
-                                  </span>
-                                  <span className="text-[11px] text-red-500 font-bold ml-1">Try different dates or explore similar items</span>
+                              <RequestActionButtons requestId={req.id} status={req.status} isOwner={false} />
+                              
+                              {req.paymentStatus === 'held' && req.status === 'accepted' && (
+                                <div className="mt-2 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 flex items-center gap-1.5">
+                                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                                  Deposit secured
                                 </div>
                               )}
 
@@ -340,19 +325,20 @@ export default async function DashboardPage() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-[40px] border border-slate-100 shadow-sm mt-2">
-                <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6">
-                  <Search className="w-10 h-10 text-blue-300" />
+            <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-2xl border border-slate-100 shadow-sm mt-4 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-slate-950/10" />
+                <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-8">
+                  <Search className="w-12 h-12 text-slate-300" />
                 </div>
-                <h3 className="text-[26px] font-extrabold text-[#222222] mb-3">
-                  No rental requests yet
+                <h3 className="text-3xl font-black text-slate-950 mb-3 tracking-tighter">
+                  Find gear for your next project
                 </h3>
-                <p className="text-[17px] text-[#717171] max-w-sm mx-auto mb-10 font-medium leading-relaxed">
-                  Explore items and make your first rental.
+                <p className="text-[17px] text-slate-500 max-w-sm mx-auto mb-10 font-bold leading-relaxed">
+                  Explore items and make your first rental. Find exactly what you need for your next adventure.
                 </p>
-                <Link href="/search">
-                  <Button className="rounded-full h-14 px-10 text-lg font-bold shadow-xl shadow-blue-200 transition-all active:scale-95 bg-blue-600 text-white hover:bg-blue-700">
-                    Go to Explore
+                <Link href="/explore">
+                  <Button className="rounded-full h-15 px-10 text-lg font-black shadow-md bg-slate-950 text-white hover:bg-black transition-all active:scale-95 duration-200">
+                    Start Exploring Gear
                   </Button>
                 </Link>
               </div>

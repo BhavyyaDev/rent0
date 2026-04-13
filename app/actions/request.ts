@@ -240,19 +240,19 @@ export async function syncRequestStatuses() {
   const now = new Date();
 
   try {
-    // 1. Mark accepted requests as completed if endDate has passed
-    const acceptedToExpire = await (prisma as any).request.findMany({
+    // 1. Mark accepted or active requests as completed if endDate has passed
+    const toComplete = await (prisma as any).request.findMany({
       where: {
-        status: 'accepted',
+        status: { in: ['accepted', 'active'] },
         endDate: { lt: now }
       }
     });
 
-    if (acceptedToExpire.length > 0) {
-      console.log(`[Request Sync] Auto-completing ${acceptedToExpire.length} requests.`);
+    if (toComplete.length > 0) {
+      console.log(`[Request Sync] Auto-completing ${toComplete.length} requests.`);
       await (prisma as any).request.updateMany({
         where: {
-          id: { in: acceptedToExpire.map((r: any) => r.id) }
+          id: { in: toComplete.map((r: any) => r.id) }
         },
         data: { 
           status: 'completed',
@@ -261,7 +261,26 @@ export async function syncRequestStatuses() {
       });
     }
 
-    // 2. Mark pending requests as rejected if startDate has passed
+    // 2. Mark accepted requests as active if their startDate has arrived
+    const toActivate = await (prisma as any).request.findMany({
+      where: {
+        status: 'accepted',
+        startDate: { lte: now },
+        endDate: { gte: now }
+      }
+    });
+
+    if (toActivate.length > 0) {
+      console.log(`[Request Sync] Auto-activating ${toActivate.length} requests.`);
+      await (prisma as any).request.updateMany({
+        where: {
+          id: { in: toActivate.map((r: any) => r.id) }
+        },
+        data: { status: 'active' }
+      });
+    }
+
+    // 3. Mark pending requests as rejected if startDate has passed before approval
     const pendingToExpire = await (prisma as any).request.findMany({
       where: {
         status: 'pending',
@@ -283,5 +302,157 @@ export async function syncRequestStatuses() {
   } catch (error) {
     console.error(`[Request Action] Status sync failed:`, error);
     return { error: 'Failed to sync statuses' };
+  }
+}
+
+// --- Formal Lifecycle System ---
+
+/**
+ * Owner accepts a pending request.
+ */
+export async function acceptRequest(requestId: string) {
+  const user = await currentUser();
+  if (!user) return { error: 'Authentication required' };
+
+  try {
+    const request = await (prisma as any).request.findUnique({
+      where: { id: requestId },
+      include: { item: true }
+    });
+
+    if (!request || request.item.ownerId !== user.id) {
+      return { error: 'Permission denied' };
+    }
+
+    if (request.status !== 'pending') {
+      return { error: 'Only pending requests can be accepted' };
+    }
+
+    // Check for conflicts before accepting
+    const conflicts = await (prisma as any).request.findMany({
+      where: {
+        itemId: request.itemId,
+        status: 'accepted',
+        id: { not: requestId },
+        startDate: { lte: request.endDate },
+        endDate: { gte: request.startDate },
+      },
+    });
+
+    if (conflicts.length > 0) {
+      return { error: 'Item is already booked for these dates' };
+    }
+
+    await (prisma as any).request.update({
+      where: { id: requestId },
+      data: { status: 'accepted' }
+    });
+
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (err) {
+    return { error: 'Failed to accept request' };
+  }
+}
+
+/**
+ * Owner rejects a pending request.
+ */
+export async function rejectRequest(requestId: string) {
+  const user = await currentUser();
+  if (!user) return { error: 'Authentication required' };
+
+  try {
+    const request = await (prisma as any).request.findUnique({
+      where: { id: requestId },
+      include: { item: true }
+    });
+
+    if (!request || request.item.ownerId !== user.id) {
+      return { error: 'Permission denied' };
+    }
+
+    if (request.status !== 'pending') {
+      return { error: 'Only pending requests can be rejected' };
+    }
+
+    await (prisma as any).request.update({
+      where: { id: requestId },
+      data: { status: 'rejected' }
+    });
+
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (err) {
+    return { error: 'Failed to reject request' };
+  }
+}
+
+/**
+ * Handle handover: transitions from accepted to active.
+ */
+export async function markAsActive(requestId: string) {
+  const user = await currentUser();
+  if (!user) return { error: 'Authentication required' };
+
+  try {
+    const request = await (prisma as any).request.findUnique({
+      where: { id: requestId },
+      include: { item: true }
+    });
+
+    if (!request || request.item.ownerId !== user.id) {
+      return { error: 'Permission denied' };
+    }
+
+    if (request.status !== 'accepted') {
+      return { error: 'Request must be accepted before it can be marked active (handed over).' };
+    }
+
+    await (prisma as any).request.update({
+      where: { id: requestId },
+      data: { status: 'active' }
+    });
+
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (err) {
+    return { error: 'Failed to mark as active' };
+  }
+}
+
+/**
+ * Handle return: transitions from active to completed and releases escrow.
+ */
+export async function markAsCompleted(requestId: string) {
+  const user = await currentUser();
+  if (!user) return { error: 'Authentication required' };
+
+  try {
+    const request = await (prisma as any).request.findUnique({
+      where: { id: requestId },
+      include: { item: true }
+    });
+
+    if (!request || request.item.ownerId !== user.id) {
+      return { error: 'Permission denied' };
+    }
+
+    if (request.status !== 'active') {
+      return { error: 'Request must be active (handed over) before it can be completed (returned).' };
+    }
+
+    await (prisma as any).request.update({
+      where: { id: requestId },
+      data: { 
+        status: 'completed',
+        paymentStatus: 'released' // Release the funds from escrow
+      }
+    });
+
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (err) {
+    return { error: 'Failed to complete request' };
   }
 }

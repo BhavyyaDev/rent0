@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from './ui/button';
 import { createRequest, checkAvailability } from '@/app/actions/request';
-import { Loader2, Calendar as CalendarIcon, Clock, ChevronRight, ArrowRight } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon, Clock, ChevronRight, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { format } from "date-fns";
@@ -73,6 +73,7 @@ export function BookingWidget({
   
   const [isCheckingDates, setIsCheckingDates] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+  const [isVerified, setIsVerified] = useState(false); // Step 3 check
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   const datesSelected = date?.from && date?.to;
@@ -100,30 +101,35 @@ export function BookingWidget({
   const finalEnd = useMemo(() => getCombinedDate(date?.to, endTime), [date?.to, endTime]);
 
   useEffect(() => {
-    if (datesSelected && finalStart && finalEnd) {
-      // Direct chronological validation
-      if (finalStart >= finalEnd) {
-        setIsAvailable(null);
-        setErrorMsg('End date must be after start date');
-        setIsCheckingDates(false);
-        return;
-      }
+    // Reset verification if dates or times change
+    setIsVerified(false);
+    setIsAvailable(null);
+    setErrorMsg('');
+  }, [date?.from, date?.to, startTime, endTime]);
 
-      const verify = async () => {
-        setIsCheckingDates(true);
-        setIsAvailable(null);
-        setErrorMsg('');
-        const res = await checkAvailability(itemId, finalStart.toISOString(), finalEnd.toISOString());
-        setIsAvailable(res.available);
-        setIsCheckingDates(false);
-      };
-      // Selection debounce: Only check DB after user finishes selecting (500ms delay)
-      const timeoutId = setTimeout(() => verify(), 500); 
-      return () => clearTimeout(timeoutId);
-    } else {
-      setIsAvailable(null);
+  const handleCheckAvailability = async () => {
+    if (!datesSelected || !finalStart || !finalEnd) return;
+    
+    if (finalStart >= finalEnd) {
+      setErrorMsg('End date must be after start date');
+      return;
     }
-  }, [datesSelected, finalStart?.toISOString(), finalEnd?.toISOString(), itemId]);
+
+    setIsCheckingDates(true);
+    setErrorMsg('');
+    
+    try {
+      const res = await checkAvailability(itemId, finalStart.toISOString(), finalEnd.toISOString());
+      setIsAvailable(res.available);
+      if (res.available) {
+        setIsVerified(true);
+      }
+    } catch (e) {
+      setErrorMsg('Failed to check availability. Please try again.');
+    } finally {
+      setIsCheckingDates(false);
+    }
+  };
 
   const handleRentNow = () => {
     if (!isLoaded) return;
@@ -151,9 +157,13 @@ export function BookingWidget({
       setErrorMsg(res.error);
       setIsConfirmModalOpen(false);
     } else {
-      setSuccessMsg('Request sent to owner');
+      setSuccessMsg('Request sent successfully 🎉');
       setIsConfirmModalOpen(false);
-      // Optional: auto-redirect after brief delay or stay for feedback
+      
+      // Auto redirect after feedback window
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 3000);
     }
     setIsPending(false);
   };
@@ -200,11 +210,38 @@ export function BookingWidget({
     setDate(finalRange);
   };
 
+  if (successMsg) {
+    return (
+      <div className="flex flex-col items-center text-center w-full mt-2 bg-white rounded-3xl shadow-sm border border-slate-100 p-8 py-12 animate-in fade-in zoom-in duration-500">
+        <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-emerald-100">
+          <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+        </div>
+        
+        <h2 className="text-2xl font-extrabold text-slate-900 mb-2">{successMsg}</h2>
+        <p className="text-slate-500 font-medium text-[15px] mb-8 leading-relaxed max-w-[280px]">
+          The owner will review your request shortly. You'll receive a notification once they respond.
+        </p>
+
+        <div className="w-full flex flex-col gap-3">
+          <Button 
+            onClick={() => router.push('/dashboard')}
+            className="w-full h-14 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-base shadow-md transition-all duration-200 ease-in-out active:scale-95"
+          >
+            Go to Dashboard
+          </Button>
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-2 animate-pulse">
+            Redirecting in a few seconds...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col w-full mt-2 bg-white rounded-3xl pb-2 shadow-sm border border-slate-100 p-6">
        
-      <div className="mb-6 flex justify-between items-baseline">
-         <span className="text-2xl font-extrabold text-slate-900">₹{pricePerDay.toLocaleString()} <span className="text-base font-normal text-slate-500">day</span></span>
+      <div className="mb-8 flex justify-between items-baseline">
+         <span className="text-3xl font-black text-slate-950 tracking-tighter">₹{pricePerDay.toLocaleString()} <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">/ day</span></span>
          {bookedRanges.length > 0 && (
            <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full border border-amber-100">Some dates unavailable</span>
          )}
@@ -236,7 +273,7 @@ export function BookingWidget({
             </div>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-fit p-0 rounded-[32px] shadow-2xl border border-slate-100 overflow-hidden" align="center">
+        <PopoverContent className="w-fit p-0 rounded-2xl shadow-xl border border-slate-100 overflow-hidden" align="center">
           <div className="bg-white p-2">
             <Calendar
               initialFocus
@@ -260,7 +297,7 @@ export function BookingWidget({
                <select 
                  value={startTime} 
                  onChange={(e) => setStartTime(e.target.value)}
-                 className="bg-white border border-slate-200 py-2 px-3 rounded-xl outline-none font-bold text-slate-700 text-sm shadow-sm"
+                 className="bg-white border border-slate-200 py-2 px-3 rounded-full outline-none font-bold text-slate-700 text-sm shadow-sm"
                >
                  {TIME_SLOTS.map(t => <option key={`start-${t}`} value={t}>{t}</option>)}
                </select>
@@ -271,7 +308,7 @@ export function BookingWidget({
                <select 
                  value={endTime} 
                  onChange={(e) => setEndTime(e.target.value)}
-                 className="bg-white border border-slate-200 py-2 px-3 rounded-xl outline-none font-bold text-slate-700 text-sm shadow-sm"
+                 className="bg-white border border-slate-200 py-2 px-3 rounded-full outline-none font-bold text-slate-700 text-sm shadow-sm"
                >
                  {TIME_SLOTS.map(t => <option key={`end-${t}`} value={t}>{t}</option>)}
                </select>
@@ -298,10 +335,9 @@ export function BookingWidget({
               <p className="text-red-700 font-bold text-[14px]">Oh no! Not available for selected dates</p>
             </div>
           ) : null}
-          
-          {/* Step 5: If unavailable -> hide price details */}
-          {isAvailable !== false && (
-            <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-100/80 mb-6 font-medium">
+          {/* Step 3: Show price breakdown only after availability success */}
+          {isVerified && isAvailable === true && !isCheckingDates && (
+            <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-100/80 mb-6 font-medium animate-in fade-in slide-in-from-bottom-2 duration-500">
               <div className="flex flex-col gap-3.5">
                 <div className="flex justify-between items-center text-slate-600 text-[15px]">
                   <span className="flex items-center gap-1">
@@ -318,12 +354,12 @@ export function BookingWidget({
                   <span className="font-bold">₹{(total * 0.5).toLocaleString()}</span>
                 </div>
                 
-                <div className="flex justify-between items-center text-slate-900 font-extrabold text-lg pt-4 border-t border-slate-200">
+                <div className="flex justify-between items-center text-slate-950 font-black text-xl pt-5 border-t-2 border-slate-200">
                   <div className="flex flex-col">
-                    <span>Total Due</span>
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tighter">Incl. refundable deposit</span>
+                    <span className="tracking-tighter">Total Due</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Incl. refundable deposit</span>
                   </div>
-                  <span className="text-[#FF385C]">₹{(total * 1.5).toLocaleString()}</span>
+                  <span className="text-slate-950">₹{(total * 1.5).toLocaleString()}</span>
                 </div>
 
                 <div className="mt-2 text-[11px] font-bold text-amber-700 bg-amber-50 px-3 py-2 rounded-xl border border-amber-100/50 text-center animate-in fade-in slide-in-from-top-1 duration-500">
@@ -346,16 +382,44 @@ export function BookingWidget({
 
           <Button 
             size="lg" 
-            onClick={handleRentNow}
-            disabled={isPending || !!successMsg || isAvailable === false || isCheckingDates || !isLoaded || (finalStart! >= finalEnd!)}
-            className="w-full rounded-2xl text-lg h-14 font-extrabold transition-all bg-[#FF385C] text-white hover:bg-[#D90B3E] mt-6 shadow-[0_6px_16px_rgba(255,56,92,0.3)] disabled:opacity-50 disabled:shadow-none hover:-translate-y-[1px]"
+            onClick={isVerified ? handleRentNow : handleCheckAvailability}
+            disabled={
+              isPending || 
+              !!successMsg || 
+              isAvailable === false || 
+              isCheckingDates || 
+              !isLoaded || 
+              (datesSelected && finalStart! >= finalEnd!) ||
+              (!datesSelected)
+            }
+            className={cn(
+              "w-full rounded-full text-lg h-15 font-black transition-all duration-200 ease-in-out shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none hover:-translate-y-[1px] mt-8",
+              isVerified && isAvailable === true 
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95" 
+                : "bg-slate-950 text-white hover:bg-black active:scale-95"
+            )}
           >
-            {!isLoaded ? 'Loading...' : !isSignedIn ? 'Sign in to book' : isPending ? (
+            {!isLoaded ? (
+              'Loading...'
+            ) : isPending ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Processing...
+                Processing booking...
               </span>
-            ) : !datesSelected ? 'Check Availability' : isCheckingDates ? 'Checking...' : isAvailable === true ? 'Confirm Booking' : isAvailable === false ? 'Not Available' : 'Confirm Booking'}
+            ) : !datesSelected ? (
+              'Select your rental dates'
+            ) : isCheckingDates ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Validating your dates...
+              </span>
+            ) : isVerified && isAvailable === true ? (
+              'Confirm and Book Now'
+            ) : isAvailable === false ? (
+              'Dates are taken'
+            ) : (
+              'Check Availability'
+            )}
           </Button>
           
           <div className="mt-5 text-center flex flex-col items-center gap-2">
@@ -381,7 +445,7 @@ export function BookingWidget({
 
       {/* Confirmation Modal */}
       <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
-        <DialogContent className="max-w-[420px] p-0 overflow-hidden rounded-[32px] border-none shadow-2xl">
+        <DialogContent className="max-w-[420px] p-0 overflow-hidden rounded-2xl border-none shadow-xl">
           <div className="p-8">
             <DialogHeader className="mb-6">
               <DialogTitle className="text-2xl font-extrabold text-[#222222]">Confirm booking</DialogTitle>
@@ -432,15 +496,15 @@ export function BookingWidget({
               <Button 
                 size="lg" 
                 onClick={handleConfirmBooking}
-                className="w-full h-14 rounded-2xl bg-[#FF385C] hover:bg-[#D90B3E] text-white font-extrabold text-lg shadow-lg shadow-pink-200 transition-all active:scale-[0.98]"
+                className="w-full h-15 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xl shadow-md transition-all duration-200 ease-in-out active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 disabled={isPending}
               >
                 {isPending ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Confirming...
+                    Confirming booking...
                   </span>
-                ) : "Confirm Booking"}
+                ) : "Confirm & Send Request"}
               </Button>
               <Button 
                 variant="ghost" 

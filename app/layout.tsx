@@ -53,11 +53,13 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#F8FAFC] min-h-screen`}>
         <ClerkProvider>
           {/* Hide Navbar during onboarding for a cleaner focused experience */}
           {globalRole !== 'onboarding' && <Navbar role={globalRole} />}
-          {children}
+          <main className="min-h-[calc(100vh-4rem)]">
+            {children}
+          </main>
         </ClerkProvider>
       </body>
     </html>

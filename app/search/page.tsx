@@ -141,8 +141,8 @@ export default async function SearchPage(props: { searchParams?: Promise<{ [key:
               </div>
               <h3 className="text-[26px] font-extrabold text-[#222222] mb-3">
                 {isDateFiltering 
-                  ? "No items available for selected dates" 
-                  : "No items found for your search"}
+                  ? "No gear available for those dates" 
+                  : "No items found"}
               </h3>
               <p className="text-[17px] text-[#717171] max-w-md mx-auto mb-10 font-medium leading-relaxed">
                 We couldn't find exactly what you were looking for. Explore some of our popular categories below or clear your filters to see our full inventory.

@@ -15,112 +15,153 @@ export default async function ItemDetailPage({
 }) {
   const { id } = await params;
 
-  // Sync statuses to ensure availability is accurate (lazy sync)
+  // Sync statuses for accuracy
   await syncRequestStatuses();
 
-  // Fetch the item from the database
   const item = await prisma.item.findUnique({
     where: { id },
     include: { owner: true }
   });
 
-  // Fetch all accepted requests for this item to show unavailable dates
   const acceptedRequests = await (prisma as any).request.findMany({
-    where: {
-      itemId: id,
-      status: 'accepted'
-    },
-    select: {
-      startDate: true,
-      endDate: true
-    }
+    where: { itemId: id, status: 'accepted' },
+    select: { startDate: true, endDate: true }
   });
 
-  // Safely map dates for the frontend
   const bookedRanges = acceptedRequests.map((req: any) => ({
     from: req.startDate.toISOString(),
     to: req.endDate.toISOString()
   }));
 
-  if (!item) {
-    notFound();
-  }
+  if (!item) notFound();
 
   return (
-    <div className="container mx-auto px-4 lg:px-8 py-10 max-w-7xl">
-      <Link href="/" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 mb-8 transition-colors">
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Items
-      </Link>
+    <div className="min-h-screen bg-white pb-24 md:pb-0">
+      {/* 1. Cinematic Hero Section */}
+      <div className="w-full max-w-[1440px] mx-auto px-0 md:px-10 lg:px-20 md:pt-6">
+        <div className="relative group overflow-hidden md:rounded-[32px] aspect-video md:aspect-[21/9] bg-slate-50 border-b md:border border-slate-200/60 shadow-sm transition-all duration-700">
+          <Link href="/explore" className="absolute top-6 left-6 z-20 flex items-center justify-center w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all group-hover:bg-white">
+            <ArrowLeft className="w-5 h-5 text-slate-900" />
+          </Link>
+          
+          {item.imageUrl ? (
+            <img 
+              src={item.imageUrl} 
+              alt={item.title} 
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out" 
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-4">
+               <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center">
+                 <Camera className="w-10 h-10 text-slate-300" />
+               </div>
+               <span className="font-bold text-lg">No image available</span>
+            </div>
+          )}
+          
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
-        {/* LEFT COLUMN: Image, Title, Description */}
-        <div className="lg:col-span-2 flex flex-col">
-          <div className="rounded-[32px] overflow-hidden bg-slate-50 relative border border-slate-200/60 shadow-sm flex items-center justify-center mb-10 w-full aspect-video md:aspect-[4/3] lg:aspect-[16/10]">
-            {item?.imageUrl ? (
-              <img src={item.imageUrl} alt={item?.title || 'Item'} className="object-cover w-full h-full" />
-            ) : (
-              <div className="flex flex-col items-center justify-center p-6 text-slate-400 gap-3">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
-                  <Camera className="w-8 h-8 text-slate-300" />
+      <div className="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 lg:gap-24">
+          
+          {/* 2. LEFT COLUMN: Detailed Info */}
+          <div className="lg:col-span-2">
+            <div className="flex flex-col gap-16">
+              <div className="flex flex-col gap-6">
+                <div className="flex items-center gap-3">
+                   <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100/50 hover:bg-emerald-50 rounded-full px-4 py-1.5 font-bold text-[11px] uppercase tracking-widest shadow-sm">Verified Gear</Badge>
+                   <span className="text-slate-400 font-bold text-[13px] tracking-[0.2em] uppercase">{item.category || 'Equipment'}</span>
                 </div>
-                <span className="font-semibold text-lg text-slate-500">Image unavailable</span>
-                <span className="text-sm">This owner hasn't uploaded a photo yet.</span>
+                <h1 className="text-[36px] md:text-[56px] font-black text-slate-950 tracking-tight leading-[1.05] drop-shadow-sm">
+                  {item.title}
+                </h1>
               </div>
-            )}
+
+              {/* Owner Micro-Profile */}
+              <div className="flex items-center gap-5 py-10 border-y-2 border-slate-100/80">
+                <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center shadow-xl transform group-hover:rotate-6 transition-transform">
+                  <span className="text-white font-black text-2xl">{item.owner?.name?.charAt(0).toUpperCase() || 'U'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-[#222222]">Lended by {item.owner?.name || 'Owner'}</h3>
+                    <ShieldCheck className="w-4 h-4 text-emerald-500 fill-emerald-50" />
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-sm font-bold text-emerald-600">Verified Identity</span>
+                    <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                    <span className="text-sm font-bold text-slate-500">Member since {new Date(item.owner?.createdAt || '').getFullYear()}</span>
+                    <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                    <span className="text-sm font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100">
+                      Trust {item.owner?.trustScore || 100}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description Block */}
+              <div className="py-2">
+                <h3 className="text-2xl font-extrabold text-[#222222] mb-4">Description</h3>
+                <p className="text-[17px] text-[#484848] leading-relaxed whitespace-pre-line font-medium italic">
+                  {item.description}
+                </p>
+              </div>
+
+              {/* Safety Badging Area */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+                 <div className="p-6 rounded-[24px] bg-slate-50/50 border border-slate-100 flex flex-col gap-3">
+                    <ShieldCheck className="w-8 h-8 text-slate-800" />
+                    <div>
+                      <h4 className="font-bold text-slate-900">Damage Protection</h4>
+                      <p className="text-sm text-slate-500 font-medium">Your rental is secured with our damage protection plan.</p>
+                    </div>
+                 </div>
+                 <div className="p-6 rounded-[24px] bg-slate-50/50 border border-slate-100 flex flex-col gap-3">
+                    <Camera className="w-8 h-8 text-slate-800" />
+                    <div>
+                      <h4 className="font-bold text-slate-900">Verified Listing</h4>
+                      <p className="text-sm text-slate-500 font-medium">All gear photos are verified before they go live on RentO.</p>
+                    </div>
+                 </div>
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-col px-1">
-            <Badge variant="outline" className="w-fit mb-5 rounded-full border-slate-200 text-emerald-600 px-4 py-1.5 shadow-sm font-semibold bg-emerald-50 text-sm">Available Now</Badge>
-            <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 mb-6 leading-[1.1]">{item?.title || 'Untitled Item'}</h1>
-
-            <div className="prose prose-sm max-w-none pt-4 border-t border-slate-100">
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Description</h3>
-              <p className="text-slate-600 leading-relaxed whitespace-pre-line text-[17px]">{item?.description || 'No description provided by the owner.'}</p>
+          {/* 3. RIGHT COLUMN: Sticky Widget (Desktop) */}
+          <div className="hidden lg:block relative">
+            <div className="sticky top-28">
+              <BookingWidget 
+                itemId={item.id}
+                itemTitle={item.title}
+                pricePerDay={item.pricePerDay}
+                bookedRanges={bookedRanges}
+              />
+              <div className="mt-6 flex flex-col items-center gap-2 opacity-60">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4" /> 100% Secure Checkout
+                </span>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* RIGHT COLUMN: Sticky Booking Widget */}
-        <div className="flex flex-col relative relative z-10">
-          <div className="sticky top-28 bg-white border border-slate-200 shadow-2xl shadow-slate-200/50 rounded-[32px] p-6 sm:p-8 flex flex-col">
-            <div className="flex flex-col mb-6">
-              <div className="text-4xl font-extrabold text-slate-900 tracking-tight">
-                ${(item?.pricePerDay || 0).toFixed(2)} <span className="text-xl font-medium text-slate-500 tracking-normal">/ day</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 mb-8 pb-8 border-b border-slate-100">
-              <div className="w-14 h-14 bg-slate-900 rounded-full flex items-center justify-center shadow-md">
-                <span className="text-white font-bold text-xl">{item?.owner?.name?.charAt(0)?.toUpperCase() || 'U'}</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-slate-900 text-lg leading-tight">{item?.owner?.name || 'Unknown User'}</span>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm font-bold text-emerald-600 flex items-center gap-1">
-                    <ShieldCheck className="w-4 h-4" /> Verified Owner
-                  </span>
-                  {(item?.owner?.trustScore ?? 0) > 0 && (
-                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded shadow-sm">
-                      Trust {item.owner!.trustScore}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <BookingWidget 
-              itemId={item?.id || ''} 
-              itemTitle={item?.title || ''}
-              pricePerDay={item?.pricePerDay || 0} 
+      {/* 4. MOBILE: Fixed Bottom Action Bar */}
+      <div className="lg:hidden fixed bottom-1 left-2 right-2 z-50 bg-white border border-slate-200/60 p-5 rounded-[28px] flex items-center justify-between shadow-[0_-12px_50px_rgba(0,0,0,0.12)] animate-in slide-in-from-bottom duration-700">
+        <div className="flex flex-col">
+          <span className="text-2xl font-black text-slate-950 tracking-tighter">₹{item.pricePerDay.toLocaleString()}</span>
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">/ per day</span>
+        </div>
+        
+        <div className="w-[180px]">
+           <BookingWidget 
+              itemId={item.id}
+              itemTitle={item.title}
+              pricePerDay={item.pricePerDay}
               bookedRanges={bookedRanges}
             />
-            
-            <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-center gap-2 text-slate-500 text-sm font-medium opacity-80">
-              <ShieldCheck className="w-5 h-5 text-slate-400" />
-              Protected by RentO Guarantee
-            </div>
-          </div>
         </div>
       </div>
     </div>

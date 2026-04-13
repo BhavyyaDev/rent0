@@ -24,21 +24,21 @@ export function DashboardItemCard({ item }: { item: Item }) {
   };
 
   return (
-    <div className="group block relative bg-white rounded-[28px] border border-slate-100 p-2.5 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-      <div className="flex flex-col gap-3">
+    <div className="group block relative bg-white rounded-2xl border border-slate-100/80 p-3 transition-all duration-200 ease-in-out hover:shadow-md hover:-translate-y-0.5 active:scale-95">
+      <div className="flex flex-col gap-4">
         {/* Image Section */}
-        <div className="w-full aspect-[4/3] relative overflow-hidden rounded-[20px] bg-[#F7F7F7]">
+        <div className="w-full aspect-[4/3] relative overflow-hidden rounded-xl bg-[#F7F7F7] shadow-inner">
           <img 
             src={imgSrc} 
             alt={item.title} 
             onError={() => setImgSrc(fallbackImg)}
-            className="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-110" 
+            className="object-cover w-full h-full transition-transform duration-1000 ease-out group-hover:scale-110" 
           />
           
           {/* Action Overlay (Desktop) */}
-          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 active:scale-95 duration-200">
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 active:scale-95 duration-300">
             <Link href={`/items/${item.id}/edit`}>
-              <Button size="icon" variant="secondary" className="rounded-full shadow-2xl bg-white/95 hover:bg-white text-slate-900 border-none h-11 w-11 transition-all hover:scale-110">
+              <Button size="icon" variant="secondary" className="rounded-full shadow-md bg-white/95 hover:bg-white text-slate-900 border-none h-12 w-12 transition-all hover:scale-110">
                 <Edit3 className="w-5 h-5" />
               </Button>
             </Link>
@@ -47,32 +47,30 @@ export function DashboardItemCard({ item }: { item: Item }) {
               variant="destructive" 
               onClick={handleDelete}
               disabled={isPending}
-              className="rounded-full shadow-2xl h-11 w-11 transition-all hover:scale-110"
+              className="rounded-full shadow-md h-12 w-12 transition-all hover:scale-110 bg-red-500 hover:bg-red-600 border-none"
             >
               {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
             </Button>
           </div>
         </div>
-
+ 
         {/* Content Section */}
-        <div className="flex flex-col px-2 pb-2">
-          <div className="flex justify-between items-start gap-2">
-            <h3 className="font-[600] text-[16px] text-[#222222] line-clamp-1 leading-[20px]">
-              {item.title}
-            </h3>
-          </div>
-          <p className="text-[14px] mt-[4px] text-[#717171] line-clamp-1 font-medium italic">
-            Management View
+        <div className="flex flex-col px-3 pb-3">
+          <h3 className="font-black text-[17px] text-slate-950 line-clamp-1 tracking-tight leading-tight">
+            {item.title}
+          </h3>
+          <p className="text-[13px] mt-1.5 text-slate-400 font-bold uppercase tracking-widest">
+            Inventory Management
           </p>
-          <div className="mt-[8px] flex items-baseline gap-1">
-            <span className="font-[600] text-[16px] text-[#222222]">₹{item.pricePerDay.toLocaleString()}</span>
-            <span className="text-[14px] text-[#717171] font-medium">day</span>
+          <div className="mt-4 flex items-baseline gap-1.5">
+            <span className="font-black text-[18px] text-slate-950 tracking-tighter">₹{item.pricePerDay.toLocaleString()}</span>
+            <span className="text-[13px] text-slate-400 font-bold uppercase tracking-widest">/ day</span>
           </div>
           
           {/* Mobile Actions */}
-          <div className="mt-5 flex gap-2 md:hidden">
-            <Link href={`/items/${item.id}/edit`} className="flex-1">
-              <Button variant="outline" className="w-full rounded-2xl flex items-center gap-2 h-11 text-sm font-bold border-slate-200">
+          <div className="mt-6 flex gap-3 md:hidden">
+            <Link href={`/items/${item.id}/edit`} className="flex-1 text-left">
+              <Button variant="outline" className="w-full rounded-full flex items-center gap-2 h-12 text-sm font-black border-slate-200 text-slate-700 bg-white hover:bg-slate-50">
                 <Edit3 className="w-4 h-4" /> Edit
               </Button>
             </Link>
@@ -80,7 +78,7 @@ export function DashboardItemCard({ item }: { item: Item }) {
               variant="destructive" 
               onClick={handleDelete}
               disabled={isPending}
-              className="flex-1 rounded-2xl flex items-center gap-2 h-11 text-sm font-bold shadow-sm"
+              className="flex-1 rounded-full flex items-center gap-2 h-12 text-sm font-black shadow-md bg-red-500 hover:bg-red-600"
             >
               {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               Delete
