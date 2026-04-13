@@ -37,33 +37,17 @@ export async function createRequest(itemId: string, startDate: string | Date, en
       return { error: 'Item not available for selected dates' };
     }
 
-    // Fetch item to get price for calculation
-    const item = await prisma.item.findUnique({ where: { id: itemId } });
-    if (!item) return { error: 'Item not found' };
-
-    const timeDiff = Math.abs(parsedEnd.getTime() - parsedStart.getTime());
-    const days = Math.ceil(timeDiff / (1000 * 3600 * 24)) || 1;
-    const totalPrice = days * item.pricePerDay;
-    const deposit = totalPrice * 0.5;
-
-    console.log("Creating request with:", {
-      totalPrice,
-      deposit,
-    });
-
     const request = await (prisma as any).request.create({
       data: {
         itemId,
         renterId: user.id,
         startDate: parsedStart,
         endDate: parsedEnd,
-        totalPrice,
-        deposit,
-        paymentStatus: 'held', // Simulate the funds being secured in escrow
+        status: 'pending',
       },
     });
 
-    console.log(`[Escrow] Rental request created: ₹${totalPrice} (₹${deposit} held)`);
+    console.log(`[Request] Rental request created: ${itemId} for ${user.id}`);
 
     return { success: true, requestId: request.id };
   } catch (error) {
@@ -111,8 +95,6 @@ export async function updateRequestStatus(requestId: string, status: string) {
       where: { id: requestId },
       data: { 
         status,
-        // If owner completes the request, release the payment
-        paymentStatus: status === 'completed' ? 'released' : undefined
       },
     });
 
@@ -256,7 +238,6 @@ export async function syncRequestStatuses() {
         },
         data: { 
           status: 'completed',
-          paymentStatus: 'released'
         }
       });
     }
@@ -389,7 +370,65 @@ export async function rejectRequest(requestId: string) {
 }
 
 /**
+ * Create a mock checkout session and return a redirect URL.
+ */
+export async function createCheckoutSession(requestId: string) {
+  const user = await currentUser();
+  if (!user) return { error: 'Authentication required' };
+
+  try {
+    const request = await (prisma as any).request.findUnique({
+      where: { id: requestId },
+      include: { item: true }
+    });
+
+    if (!request || request.renterId !== user.id) {
+       return { error: 'Permission denied' };
+    }
+
+    if (request.status !== 'accepted') {
+       return { error: 'You can only pay for requests that have been accepted by the owner.' };
+    }
+
+    // In a real app, you would create a Stripe session here.
+    // For now, we redirect to our internal mock checkout.
+    return { success: true, url: `/checkout?id=${requestId}` };
+  } catch (err) {
+    return { error: 'Failed to initiate checkout' };
+  }
+}
+
+/**
+ * Handle successful mock payment.
+ */
+export async function confirmPayment(requestId: string) {
+  const user = await currentUser();
+  if (!user) return { error: 'Authentication required' };
+
+  try {
+    const request = await (prisma as any).request.findUnique({
+      where: { id: requestId }
+    });
+
+    if (!request || request.renterId !== user.id) {
+       return { error: 'Permission denied' };
+    }
+
+    await (prisma as any).request.update({
+      where: { id: requestId },
+      data: { paymentStatus: 'paid' }
+    });
+
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (err) {
+    return { error: 'Failed to confirm payment' };
+  }
+}
+
+/**
  * Handle handover: transitions from accepted to active.
+ * Only allowed if paymentStatus is 'paid'.
  */
 export async function markAsActive(requestId: string) {
   const user = await currentUser();
@@ -409,6 +448,10 @@ export async function markAsActive(requestId: string) {
       return { error: 'Request must be accepted before it can be marked active (handed over).' };
     }
 
+    if (request.paymentStatus !== 'paid') {
+      return { error: 'Handover is only allowed after the renter has completed the payment.' };
+    }
+
     await (prisma as any).request.update({
       where: { id: requestId },
       data: { status: 'active' }
@@ -422,7 +465,35 @@ export async function markAsActive(requestId: string) {
 }
 
 /**
- * Handle return: transitions from active to completed and releases escrow.
+ * Fetch detailed request info for checkout.
+ */
+export async function getRequestDetails(requestId: string) {
+  try {
+    const request = await (prisma as any).request.findUnique({
+      where: { id: requestId },
+      include: { item: true }
+    });
+
+    if (!request) return { error: 'Request not found' };
+
+    const start = new Date(request.startDate);
+    const end = new Date(request.endDate);
+    const days = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 3600 * 24)) || 1;
+    const totalPrice = days * request.item.pricePerDay;
+
+    return {
+      success: true,
+      title: request.item.title,
+      totalPrice,
+      days,
+    };
+  } catch (err) {
+    return { error: 'Failed to fetch request details' };
+  }
+}
+
+/**
+ * Handle return: transitions from active to completed.
  */
 export async function markAsCompleted(requestId: string) {
   const user = await currentUser();
@@ -446,7 +517,6 @@ export async function markAsCompleted(requestId: string) {
       where: { id: requestId },
       data: { 
         status: 'completed',
-        paymentStatus: 'released' // Release the funds from escrow
       }
     });
 

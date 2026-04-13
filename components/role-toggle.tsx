@@ -37,7 +37,7 @@ export function RoleToggle({ currentRole }: { currentRole: string }) {
       <button
         onClick={() => handleToggle('lender')}
         disabled={isPending}
-        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all duration-200 Record ease-in-out active:scale-95 ${
+        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all duration-200 ease-in-out active:scale-95 ${
           currentRole === 'lender'
             ? 'bg-slate-950 text-white shadow-xl'
             : 'text-slate-500 hover:text-slate-700'

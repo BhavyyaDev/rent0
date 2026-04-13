@@ -31,7 +31,7 @@ export default async function DashboardPage() {
   // Fetch items owned by the current user
   const rawItems = await prisma.item.findMany({
     where: { ownerId: userId },
-    include: { 
+    include: {
       owner: true,
       requests: {
         where: {
@@ -189,20 +189,24 @@ export default async function DashboardPage() {
                             {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
                           </td>
                           <td className="p-5 text-right">
-                            <div className="font-extrabold text-[#222222]">₹{(req.totalPrice || 0).toLocaleString()}</div>
-                            {req.paymentStatus === 'held' ? (
-                              <div className="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">Pending Release</div>
-                            ) : req.paymentStatus === 'released' ? (
-                              <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-tighter">Received</div>
-                            ) : null}
+                            {(() => {
+                              const start = new Date(req.startDate);
+                              const end = new Date(req.endDate);
+                              const days = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 3600 * 24)) || 1;
+                              const estimate = days * req.item.pricePerDay;
+                              return (
+                                <div className="font-extrabold text-[#222222]">₹{estimate.toLocaleString()}</div>
+                              );
+                            })()}
+                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Est. Earnings</div>
                           </td>
                           <td className="p-5 w-40">
-                            <RequestActionButtons requestId={req.id} status={req.status} isOwner={true} />
-                            {req.paymentStatus === 'released' && (
-                              <div className="mt-2 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 text-center">
-                                Payment released to owner
-                              </div>
-                            )}
+                            <RequestActionButtons 
+                              requestId={req.id} 
+                              status={req.status} 
+                              isOwner={true} 
+                              paymentStatus={req.paymentStatus}
+                            />
                           </td>
                         </tr>
                       ))}
@@ -249,26 +253,27 @@ export default async function DashboardPage() {
         {role === 'renter' && (
           <section className="flex flex-col gap-10">
             <div className="border-b border-slate-200 pb-5">
-              <h2 className="text-[28px] font-extrabold text-[#222222]">Renter Dashboard</h2>
-              <p className="text-[#717171] font-medium mt-1">Track the status of gear you want to rent from others.</p>
+              <h2 className="text-[28px] font-extrabold text-slate-950">Renter Dashboard</h2>
+              <p className="text-slate-500 font-medium mt-1">Track the status of gear you want to rent from others.</p>
             </div>
 
             {outgoingRequests && outgoingRequests.length > 0 ? (
               <div>
                 <h3 className="text-[20px] font-black text-slate-950 mb-6">My Requests</h3>
-                <div className="bg-white rounded-[24px] border border-slate-200 overflow-hidden shadow-sm overflow-x-auto">
-                  <table className="w-full text-left border-collapse min-w-[700px]">
+                <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
                     <thead>
                       <tr className="bg-slate-50 border-b-2 border-slate-200 text-[11px] tracking-[0.2em] text-slate-400 uppercase font-black">
                         <th className="p-6">ITEM</th>
                         <th className="p-6">OWNER</th>
                         <th className="p-6">DATES</th>
+                        <th className="p-6 text-right">PROJECT COST</th>
                         <th className="p-6">STATUS</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {outgoingRequests.map((req: any) => (
-                        <tr key={req.id} className="hover:bg-slate-50/80 transition-colors">
+                        <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
                           <td className="p-5">
                             <Link href={`/items/${req.item.id}`} className="font-bold text-slate-900 line-clamp-1 hover:underline text-[15px]">{req.item.title}</Link>
                             <div className="text-[13px] font-bold text-emerald-600 mt-0.5">₹{req.item.pricePerDay}/day</div>
@@ -283,27 +288,29 @@ export default async function DashboardPage() {
                           <td className="p-5 text-slate-600 font-bold whitespace-nowrap text-[14px]">
                             {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
                           </td>
-                          <td className="p-5">
-                            <div className="flex flex-col">
-                              <span className="font-extrabold text-slate-900 text-[15px]">₹{(req.totalPrice || 0).toLocaleString()}</span>
-                              <div className="flex items-center gap-1.5 mt-1">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Deposit</span>
-                                <span className="text-[11px] font-bold text-amber-600">₹{(req.deposit || 0).toLocaleString()}</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-5 w-60">
-                            <div className="flex items-center gap-3">
-                              <RequestActionButtons requestId={req.id} status={req.status} isOwner={false} />
-                              
-                              {req.paymentStatus === 'held' && req.status === 'accepted' && (
-                                <div className="mt-2 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 flex items-center gap-1.5">
-                                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                                  Deposit secured
+                          <td className="p-5 text-right">
+                            {(() => {
+                              const start = new Date(req.startDate);
+                              const end = new Date(req.endDate);
+                              const days = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 3600 * 24)) || 1;
+                              const estimate = days * req.item.pricePerDay;
+                              return (
+                                <div className="flex flex-col">
+                                  <span className="font-extrabold text-slate-950 text-[15px]">₹{estimate.toLocaleString()}</span>
+                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Est. Total</span>
                                 </div>
-                              )}
-
-                              {/* Edit/Cancellation Button Logic */}
+                              );
+                            })()}
+                          </td>
+                          <td className="p-5 min-w-[220px]">
+                            <div className="flex items-center gap-3">
+                              <RequestActionButtons 
+                                requestId={req.id} 
+                                status={req.status} 
+                                isOwner={false} 
+                                paymentStatus={req.paymentStatus}
+                              />
+                              
                               {req.status === 'pending' && (
                                 <div className="flex items-center gap-2 ml-4">
                                   <EditRequestModal
@@ -325,7 +332,7 @@ export default async function DashboardPage() {
                 </div>
               </div>
             ) : (
-            <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-2xl border border-slate-200 shadow-sm mt-4 relative overflow-hidden">
+              <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-3xl border border-slate-200 shadow-sm mt-4 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-slate-950/10" />
                 <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-8">
                   <Search className="w-12 h-12 text-slate-300" />
