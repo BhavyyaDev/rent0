@@ -369,8 +369,10 @@ export async function rejectRequest(requestId: string) {
   }
 }
 
+import { stripe } from '@/lib/stripe';
+
 /**
- * Create a mock checkout session and return a redirect URL.
+ * Create a Stripe checkout session and return the redirect URL.
  */
 export async function createCheckoutSession(requestId: string) {
   const user = await currentUser();
@@ -390,11 +392,44 @@ export async function createCheckoutSession(requestId: string) {
        return { error: 'You can only pay for requests that have been accepted by the owner.' };
     }
 
-    // In a real app, you would create a Stripe session here.
-    // For now, we redirect to our internal mock checkout.
-    return { success: true, url: `/checkout?id=${requestId}` };
+    const start = new Date(request.startDate);
+    const end = new Date(request.endDate);
+    const days = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 3600 * 24)) || 1;
+    const totalPrice = days * request.item.pricePerDay;
+
+    // Use absolute URL for Stripe redirect
+    // Use localhost for local dev if NEXT_PUBLIC_APP_URL is not set
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      line_items: [
+        {
+          price_data: {
+            currency: 'inr',
+            product_data: {
+              name: request.item.title,
+              description: `Rental from ${start.toLocaleDateString()} to ${end.toLocaleDateString()} (${days} days)`,
+            },
+            unit_amount: Math.round(totalPrice * 100), // Stripe expects amount in sub-units (paise/cents)
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        requestId,
+        renterId: user.id,
+      },
+      success_url: `${baseUrl}/dashboard?payment=success&requestId=${requestId}`,
+      cancel_url: `${baseUrl}/dashboard?payment=cancelled`,
+    });
+
+    console.log(`[Stripe] Checkout session created: ${session.id} for Request ${requestId}`);
+    return { success: true, url: session.url };
   } catch (err) {
-    return { error: 'Failed to initiate checkout' };
+    console.error(`[Stripe Error] Session creation failed:`, err);
+    return { error: 'Failed to initiate secure payment checkout' };
   }
 }
 
