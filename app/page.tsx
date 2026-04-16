@@ -29,7 +29,7 @@ export default async function Home() {
   ];
 
   // 1. Fetch Recently Added
-  let recentlyAddedRaw = [];
+  let recentlyAddedRaw: any[] = [];
   try {
     recentlyAddedRaw = await prisma.item.findMany({
       take: 5,
@@ -47,7 +47,7 @@ export default async function Home() {
   }
 
   // 2. Fetch Popular (by request count)
-  let popularRaw = [];
+  let popularRaw: any[] = [];
   try {
     popularRaw = await (prisma as any).item.findMany({
       take: 5,

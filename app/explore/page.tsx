@@ -20,7 +20,7 @@ export default async function ExplorePage(props: {
   }
 
   // Fetch items from the database with filtered order
-  let rawItems = [];
+  let rawItems: any[] = [];
   try {
     rawItems = await prisma.item.findMany({
       include: { 
