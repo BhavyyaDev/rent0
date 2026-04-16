@@ -17,10 +17,24 @@ export async function createRequest(itemId: string, startDate: string | Date, en
     const parsedStart = new Date(startDate);
     const parsedEnd = new Date(endDate);
     const now = new Date();
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    // Backend validation: Start must be before end, and start cannot be in the past
-    if (parsedStart >= parsedEnd || parsedStart < new Date(now.setMinutes(now.getMinutes() - 5))) {
-      return { error: 'Invalid date selection' };
+    // 1. Initial date validation
+    if (parsedStart >= parsedEnd || parsedStart < todayMidnight) {
+      return { error: 'Invalid state' };
+    }
+
+    // 2. Item existence and ownership check
+    const item = await (prisma as any).item.findUnique({
+      where: { id: itemId }
+    });
+
+    if (!item) {
+      return { error: 'Invalid state' };
+    }
+
+    if (item.ownerId === user.id) {
+      return { error: 'Unauthorized' };
     }
 
     // Prevent double booking overlapping reservations
@@ -181,9 +195,10 @@ export async function updateRequestDates(requestId: string, startDate: string | 
     const parsedStart = new Date(startDate);
     const parsedEnd = new Date(endDate);
     const now = new Date();
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    // Backend validation: Start must be before end, and start cannot be in the past
-    if (parsedStart >= parsedEnd || parsedStart < new Date(now.setMinutes(now.getMinutes() - 5))) {
+    // Backend validation: Start must be before end, and start cannot be before today's date
+    if (parsedStart >= parsedEnd || parsedStart < todayMidnight) {
       return { error: 'Invalid date selection' };
     }
 
@@ -302,11 +317,11 @@ export async function acceptRequest(requestId: string) {
     });
 
     if (!request || request.item.ownerId !== user.id) {
-      return { error: 'Permission denied' };
+      return { error: 'Unauthorized' };
     }
 
     if (request.status !== 'pending') {
-      return { error: 'Only pending requests can be accepted' };
+      return { error: 'Invalid state' };
     }
 
     // Check for conflicts before accepting
@@ -350,11 +365,11 @@ export async function rejectRequest(requestId: string) {
     });
 
     if (!request || request.item.ownerId !== user.id) {
-      return { error: 'Permission denied' };
+      return { error: 'Unauthorized' };
     }
 
     if (request.status !== 'pending') {
-      return { error: 'Only pending requests can be rejected' };
+      return { error: 'Invalid state' };
     }
 
     await (prisma as any).request.update({
@@ -385,11 +400,15 @@ export async function createCheckoutSession(requestId: string) {
     });
 
     if (!request || request.renterId !== user.id) {
-       return { error: 'Permission denied' };
+       return { error: 'Unauthorized' };
     }
 
     if (request.status !== 'accepted') {
-       return { error: 'You can only pay for requests that have been accepted by the owner.' };
+       return { error: 'Invalid state' };
+    }
+
+    if (request.paymentStatus === 'paid') {
+      return { error: 'Already processed' };
     }
 
     const start = new Date(request.startDate);
@@ -421,8 +440,8 @@ export async function createCheckoutSession(requestId: string) {
         requestId,
         renterId: user.id,
       },
-      success_url: `${baseUrl}/dashboard?payment=success&requestId=${requestId}`,
-      cancel_url: `${baseUrl}/dashboard?payment=cancelled`,
+      success_url: `${baseUrl}/checkout?status=success&requestId=${requestId}`,
+      cancel_url: `${baseUrl}/dashboard`,
     });
 
     console.log(`[Stripe] Checkout session created: ${session.id} for Request ${requestId}`);
@@ -433,31 +452,40 @@ export async function createCheckoutSession(requestId: string) {
   }
 }
 
+import { auth } from '@clerk/nextjs/server';
+
 /**
- * Handle successful mock payment.
+ * Handle successful payment confirmation.
  */
 export async function confirmPayment(requestId: string) {
-  const user = await currentUser();
-  if (!user) return { error: 'Authentication required' };
+  const { userId } = await auth();
+
+  if (!userId) throw new Error("Unauthorized");
 
   try {
     const request = await (prisma as any).request.findUnique({
       where: { id: requestId }
     });
 
-    if (!request || request.renterId !== user.id) {
-       return { error: 'Permission denied' };
+    if (!request) throw new Error("Request not found");
+
+    if (request.renterId !== userId) {
+      throw new Error("Not allowed");
     }
 
-    await (prisma as any).request.update({
+    const updated = await (prisma as any).request.update({
       where: { id: requestId },
-      data: { paymentStatus: 'paid' }
+      data: { 
+        paymentStatus: 'paid',
+        escrowStatus: 'held'
+      }
     });
 
     revalidatePath('/dashboard');
-    return { success: true };
+    return updated;
   } catch (err) {
-    return { error: 'Failed to confirm payment' };
+    console.error(`[Payment Confirmation] Failed for ${requestId}:`, err);
+    throw err;
   }
 }
 
@@ -476,20 +504,19 @@ export async function markAsActive(requestId: string) {
     });
 
     if (!request || request.item.ownerId !== user.id) {
-      return { error: 'Permission denied' };
+      return { error: 'Unauthorized' };
     }
 
-    if (request.status !== 'accepted') {
-      return { error: 'Request must be accepted before it can be marked active (handed over).' };
-    }
-
-    if (request.paymentStatus !== 'paid') {
-      return { error: 'Handover is only allowed after the renter has completed the payment.' };
+    if (request.status !== 'accepted' || request.paymentStatus !== 'paid') {
+      return { error: 'Invalid state' };
     }
 
     await (prisma as any).request.update({
       where: { id: requestId },
-      data: { status: 'active' }
+      data: { 
+        status: 'active',
+        escrowStatus: 'released'
+      }
     });
 
     revalidatePath('/dashboard');
@@ -541,11 +568,11 @@ export async function markAsCompleted(requestId: string) {
     });
 
     if (!request || request.item.ownerId !== user.id) {
-      return { error: 'Permission denied' };
+      return { error: 'Unauthorized' };
     }
 
     if (request.status !== 'active') {
-      return { error: 'Request must be active (handed over) before it can be completed (returned).' };
+      return { error: 'Invalid state' };
     }
 
     await (prisma as any).request.update({

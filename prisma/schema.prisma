@@ -43,6 +43,7 @@ model Request {
   totalPrice    Float    @default(0)
   deposit       Float    @default(0)
   paymentStatus String   @default("pending")
+  escrowStatus  String   @default("none") // none, held, released, refunded
 
   item          Item     @relation(fields: [itemId], references: [id])
   renter        User     @relation(fields: [renterId], references: [id])

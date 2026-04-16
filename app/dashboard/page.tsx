@@ -8,9 +8,7 @@ import Link from 'next/link';
 import { PlusCircle, ShoppingBag, Package, Activity, Banknote, Search, XCircle, ShieldCheck, Tag, Calendar } from 'lucide-react';
 import { Item } from '@/components/item-card';
 import { RoleToggle } from '@/components/role-toggle';
-import { deleteRequest, syncRequestStatuses } from '@/app/actions/request';
-import { EditRequestModal } from '@/components/edit-request-modal';
-import { DeleteRequestButton } from '@/components/delete-request-button';
+import { syncRequestStatuses } from '@/app/actions/request';
 
 export const dynamic = "force-dynamic";
 
@@ -305,27 +303,16 @@ export default async function DashboardPage() {
                             })()}
                           </td>
                           <td className="p-5 min-w-[220px]">
-                            <div className="flex items-center gap-3">
-                              <RequestActionButtons 
-                                requestId={req.id} 
-                                status={req.status} 
-                                isOwner={false} 
-                                paymentStatus={req.paymentStatus}
-                              />
-                              
-                              {req.status === 'pending' && (
-                                <div className="flex items-center gap-2 ml-4">
-                                  <EditRequestModal
-                                    requestId={req.id}
-                                    itemId={req.item.id}
-                                    initialStartDate={new Date(req.startDate)}
-                                    initialEndDate={new Date(req.endDate)}
-                                    itemTitle={req.item.title}
-                                  />
-                                  <DeleteRequestButton requestId={req.id} />
-                                </div>
-                              )}
-                            </div>
+                            <RequestActionButtons 
+                              requestId={req.id} 
+                              status={req.status} 
+                              isOwner={false} 
+                              paymentStatus={req.paymentStatus}
+                              itemId={req.item.id}
+                              startDate={new Date(req.startDate)}
+                              endDate={new Date(req.endDate)}
+                              itemTitle={req.item.title}
+                            />
                           </td>
                         </tr>
                       ))}

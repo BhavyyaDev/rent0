@@ -8,7 +8,9 @@ import {
   markAsCompleted,
   createCheckoutSession
 } from '@/app/actions/request';
-import { Loader2, CheckCircle2, Clock, PackageCheck, Ban, CreditCard, Wallet } from 'lucide-react';
+import { Loader2, CheckCircle2, Clock, PackageCheck, Ban, CreditCard, Wallet, Edit2, Trash2, XCircle } from 'lucide-react';
+import { EditRequestModal } from './edit-request-modal';
+import { DeleteRequestButton } from './delete-request-button';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { 
@@ -24,9 +26,23 @@ interface RequestActionProps {
   status: string;
   isOwner?: boolean;
   paymentStatus?: string;
+  // Metadata for renter actions (edit/delete)
+  itemId?: string;
+  startDate?: Date;
+  endDate?: Date;
+  itemTitle?: string;
 }
 
-export function RequestActionButtons({ requestId, status, isOwner = false, paymentStatus = 'pending' }: RequestActionProps) {
+export function RequestActionButtons({ 
+  requestId, 
+  status, 
+  isOwner = false, 
+  paymentStatus = 'pending',
+  itemId,
+  startDate,
+  endDate,
+  itemTitle
+}: RequestActionProps) {
   const [isPending, startTransition] = useTransition();
   const [isAcceptOpen, setIsAcceptOpen] = useState(false);
   const [isRejectOpen, setIsRejectOpen] = useState(false);
@@ -58,11 +74,27 @@ export function RequestActionButtons({ requestId, status, isOwner = false, payme
   if (!isOwner) {
     if (status === 'pending') {
       return (
-        <div className="flex flex-col gap-1">
-          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm whitespace-nowrap w-fit gap-1.5">
-            <Clock className="w-3.5 h-3.5" /> Waiting for owner
-          </span>
-          <span className="text-[11px] text-slate-500 font-bold ml-1">Review in progress</span>
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-1">
+            <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm whitespace-nowrap w-fit gap-1.5">
+              <Clock className="w-3.5 h-3.5" /> Waiting for Owner
+            </span>
+            <span className="text-[11px] text-slate-500 font-bold ml-1">Review in progress</span>
+          </div>
+
+          {/* Renter specific pending actions */}
+          <div className="flex items-center gap-2 ml-2">
+            {itemId && startDate && endDate && itemTitle && (
+              <EditRequestModal
+                requestId={requestId}
+                itemId={itemId}
+                initialStartDate={startDate}
+                initialEndDate={endDate}
+                itemTitle={itemTitle}
+              />
+            )}
+            <DeleteRequestButton requestId={requestId} />
+          </div>
         </div>
       );
     }
@@ -70,42 +102,42 @@ export function RequestActionButtons({ requestId, status, isOwner = false, payme
       if (paymentStatus !== 'paid') {
         return (
           <div className="flex flex-col gap-3">
-            <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm whitespace-nowrap w-fit gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Approved by owner
+            <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-amber-50 text-amber-600 border border-amber-100 shadow-sm whitespace-nowrap w-fit gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5" /> Waiting for Payment
             </span>
             <Button 
               onClick={handlePayNow}
               disabled={isPending}
               className="bg-slate-950 hover:bg-black text-white rounded-full h-10 px-6 font-black text-[13px] shadow-lg active:scale-95 transition-all flex items-center gap-2"
             >
-              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CreditCard className="w-4 h-4" /> Pay to confirm</>}
+              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CreditCard className="w-4 h-4" /> Pay Now</>}
             </Button>
           </div>
         );
       }
       return (
         <div className="flex flex-col gap-1">
-          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm whitespace-nowrap w-fit gap-1.5">
-            <Wallet className="w-3.5 h-3.5" /> Payment Confirmed
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-blue-50 text-blue-600 border border-blue-100 shadow-sm whitespace-nowrap w-fit gap-1.5">
+            <Wallet className="w-3.5 h-3.5" /> Ready for Pickup
           </span>
-          <span className="text-[11px] text-emerald-600 font-bold ml-1">Ready for pickup</span>
+          <span className="text-[11px] text-blue-500 font-bold ml-1">Secure payment received</span>
         </div>
       );
     }
     if (status === 'active') {
       return (
         <div className="flex flex-col gap-1">
-          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-blue-100 text-blue-700 border border-blue-200 shadow-sm whitespace-nowrap w-fit gap-1.5">
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-sm whitespace-nowrap w-fit gap-1.5">
             <PackageCheck className="w-3.5 h-3.5" /> In Use
           </span>
-          <span className="text-[11px] text-blue-500 font-bold ml-1">Keep the gear safe!</span>
+          <span className="text-[11px] text-emerald-500 font-bold ml-1">Keep the gear safe!</span>
         </div>
       );
     }
     if (status === 'completed') {
       return (
         <div className="flex flex-col gap-1">
-          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-purple-100 text-purple-700 border border-purple-200 shadow-sm whitespace-nowrap w-fit gap-1.5">
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-purple-50 text-purple-600 border border-purple-100 shadow-sm whitespace-nowrap w-fit gap-1.5">
             Completed
           </span>
           <span className="text-[11px] text-purple-500 font-bold ml-1">Gear returned successfully</span>
@@ -114,8 +146,8 @@ export function RequestActionButtons({ requestId, status, isOwner = false, payme
     }
     if (status === 'rejected') {
       return (
-        <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm whitespace-nowrap w-fit gap-1.5">
-          <Ban className="w-3.5 h-3.5" /> Request declined
+        <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-red-50 text-red-600 border border-red-100 shadow-sm whitespace-nowrap w-fit gap-1.5">
+          <Ban className="w-3.5 h-3.5" /> Rejected
         </span>
       );
     }
@@ -125,7 +157,7 @@ export function RequestActionButtons({ requestId, status, isOwner = false, payme
   // --- OWNER VIEW (Action Buttons & Guarded Handover) ---
   if (status === 'completed') {
     return (
-      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-purple-100 text-purple-700 whitespace-nowrap shadow-sm border border-purple-200">
+      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-purple-50 text-purple-600 whitespace-nowrap shadow-sm border border-purple-100">
         Completed
       </span>
     );
@@ -133,8 +165,8 @@ export function RequestActionButtons({ requestId, status, isOwner = false, payme
 
   if (status === 'rejected') {
     return (
-      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-red-100 text-red-700 whitespace-nowrap shadow-sm border border-red-200">
-        <Ban className="w-3.5 h-3.5 mr-1.5" /> Request declined
+      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-red-50 text-red-600 whitespace-nowrap shadow-sm border border-red-100">
+        <Ban className="w-3.5 h-3.5 mr-1.5" /> Rejected
       </span>
     );
   }
@@ -168,11 +200,11 @@ export function RequestActionButtons({ requestId, status, isOwner = false, payme
           <div className="flex flex-col gap-2 w-full">
             {paymentStatus !== 'paid' ? (
               <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-600 border border-amber-100 shadow-sm whitespace-nowrap w-fit gap-1.5 animate-pulse">
-                <Clock className="w-3 h-3" /> Waiting for Renter Payment
+                <Clock className="w-3 h-3" /> Waiting for Payment
               </span>
             ) : (
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm whitespace-nowrap w-fit gap-1.5">
-                <CheckCircle2 className="w-3 h-3" /> Payment Secured
+              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-extrabold bg-blue-50 text-blue-600 border border-blue-100 shadow-sm whitespace-nowrap w-fit gap-1.5">
+                <CheckCircle2 className="w-3 h-3" /> Ready for Pickup
               </span>
             )}
             <Button 
@@ -188,14 +220,14 @@ export function RequestActionButtons({ requestId, status, isOwner = false, payme
 
         {status === 'active' && (
           <div className="flex flex-col gap-2 w-full">
-            <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-extrabold bg-blue-100 text-blue-700 border border-blue-200 shadow-sm whitespace-nowrap w-fit gap-1.5">
+            <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-sm whitespace-nowrap w-fit gap-1.5">
               <PackageCheck className="w-3 h-3" /> In Use
             </span>
             <Button 
               size="lg"
               onClick={() => handleAction(markAsCompleted)}
               disabled={isPending}
-              className="w-full bg-emerald-600 text-white font-black rounded-full h-12 text-[13px] hover:bg-emerald-700 transition-all duration-200 ease-in-out disabled:opacity-40 shadow-md active:scale-95"
+              className="w-full bg-slate-950 text-white font-black rounded-full h-12 text-[13px] hover:bg-black transition-all duration-200 ease-in-out disabled:opacity-40 shadow-md active:scale-95"
             >
               {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Mark as Returned"}
             </Button>

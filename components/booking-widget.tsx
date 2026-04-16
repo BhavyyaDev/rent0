@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from './ui/button';
 import { createRequest, checkAvailability } from '@/app/actions/request';
-import { Loader2, Calendar as CalendarIcon, Clock, ChevronRight, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon, Clock, ChevronRight, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { format } from "date-fns";
@@ -448,8 +448,10 @@ export function BookingWidget({
                     <span className="text-2xl font-extrabold text-slate-950">₹{total.toLocaleString()}</span>
                   </div>
                   <div className="text-right flex flex-col items-end gap-1">
-                     <span className="text-[11px] font-extrabold text-slate-600 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">Standard Request</span>
-                     <span className="text-[12px] font-bold text-slate-500">Pay directly to owner</span>
+                     <span className="text-[11px] font-extrabold text-[#222222] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 flex items-center gap-1">
+                       <ShieldCheck className="w-3 h-3 text-emerald-600" /> RentO Escrow
+                     </span>
+                     <span className="text-[10px] font-bold text-slate-500">Funds held until handover</span>
                   </div>
                 </div>
               </div>
