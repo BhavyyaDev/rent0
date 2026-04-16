@@ -100,44 +100,46 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          {/* Stats Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-            {/* Total Listings Card */}
-            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm flex items-center gap-5 hover:shadow-md transition-all duration-200">
-              <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-                <Package className="w-6 h-6 text-blue-600" />
+          {/* Stats Section - Lender Only */}
+          {role === 'lender' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+              {/* Total Listings Card */}
+              <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm flex items-center gap-5 hover:shadow-md transition-all duration-200">
+                <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                  <Package className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-slate-400 font-bold text-[11px] uppercase tracking-[0.2em] mb-1">Total Listings</p>
+                  <p className="text-4xl font-black text-slate-950">{totalListings}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-slate-400 font-bold text-[11px] uppercase tracking-[0.2em] mb-1">Total Listings</p>
-                <p className="text-4xl font-black text-slate-950">{totalListings}</p>
-              </div>
-            </div>
 
-            {/* Active Listings Card */}
-            <div className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.04)] flex items-center gap-5">
-              <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center shrink-0">
-                <Activity className="w-6 h-6 text-green-600" />
+              {/* Active Listings Card */}
+              <div className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.04)] flex items-center gap-5">
+                <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center shrink-0">
+                  <Activity className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-slate-400 font-bold text-[11px] uppercase tracking-[0.2em] mb-1">Active Listings</p>
+                  <p className="text-4xl font-black text-slate-950">{activeListings}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-slate-400 font-bold text-[11px] uppercase tracking-[0.2em] mb-1">Active Listings</p>
-                <p className="text-4xl font-black text-slate-950">{activeListings}</p>
-              </div>
-            </div>
 
-            {/* Estimated Value Card */}
-            <div className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.04)] flex items-center gap-5">
-              <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-                <Banknote className="w-6 h-6 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-slate-400 font-bold text-[11px] uppercase tracking-[0.2em] mb-1">Estimated Value</p>
-                <div className="flex items-baseline gap-1">
-                  <p className="text-4xl font-black text-slate-950">₹{estimatedValue.toLocaleString()}</p>
-                  <span className="text-slate-500 font-bold text-sm">/mo</span>
+              {/* Estimated Value Card */}
+              <div className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.04)] flex items-center gap-5">
+                <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
+                  <Banknote className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-slate-400 font-bold text-[11px] uppercase tracking-[0.2em] mb-1">Estimated Value</p>
+                  <div className="flex items-baseline gap-1">
+                    <p className="text-4xl font-black text-slate-950">₹{estimatedValue.toLocaleString()}</p>
+                    <span className="text-slate-500 font-bold text-sm">/mo</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 

@@ -96,7 +96,7 @@ export function RequestActionButtons({ requestId, status, isOwner = false, payme
       return (
         <div className="flex flex-col gap-1">
           <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-blue-100 text-blue-700 border border-blue-200 shadow-sm whitespace-nowrap w-fit gap-1.5">
-            <PackageCheck className="w-3.5 h-3.5" /> Currently rented
+            <PackageCheck className="w-3.5 h-3.5" /> In Use
           </span>
           <span className="text-[11px] text-blue-500 font-bold ml-1">Keep the gear safe!</span>
         </div>
@@ -187,14 +187,19 @@ export function RequestActionButtons({ requestId, status, isOwner = false, payme
         )}
 
         {status === 'active' && (
-          <Button 
-            size="lg"
-            onClick={() => handleAction(markAsCompleted)}
-            disabled={isPending}
-            className="w-full bg-emerald-600 text-white font-black rounded-full h-12 text-[13px] hover:bg-emerald-700 transition-all duration-200 ease-in-out disabled:opacity-40 shadow-md active:scale-95"
-          >
-            {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Complete Rental"}
-          </Button>
+          <div className="flex flex-col gap-2 w-full">
+            <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-extrabold bg-blue-100 text-blue-700 border border-blue-200 shadow-sm whitespace-nowrap w-fit gap-1.5">
+              <PackageCheck className="w-3 h-3" /> In Use
+            </span>
+            <Button 
+              size="lg"
+              onClick={() => handleAction(markAsCompleted)}
+              disabled={isPending}
+              className="w-full bg-emerald-600 text-white font-black rounded-full h-12 text-[13px] hover:bg-emerald-700 transition-all duration-200 ease-in-out disabled:opacity-40 shadow-md active:scale-95"
+            >
+              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Mark as Returned"}
+            </Button>
+          </div>
         )}
       </div>
 
