@@ -29,35 +29,47 @@ export default async function Home() {
   ];
 
   // 1. Fetch Recently Added
-  const recentlyAddedRaw = await prisma.item.findMany({
-    take: 5,
-    orderBy: { createdAt: 'desc' },
-    include: { 
-      owner: true,
-      requests: {
-        where: { status: 'accepted', endDate: { gte: new Date() } }
+  let recentlyAddedRaw = [];
+  try {
+    recentlyAddedRaw = await prisma.item.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      include: { 
+        owner: true,
+        requests: {
+          where: { status: 'accepted', endDate: { gte: new Date() } }
+        }
       }
-    }
-  });
+    });
+  } catch (error) {
+    console.error("Database error fetching recently added items:", error);
+    recentlyAddedRaw = [];
+  }
 
   // 2. Fetch Popular (by request count)
-  const popularRaw = await (prisma as any).item.findMany({
-    take: 5,
-    include: { 
-      owner: true,
-      requests: {
-        where: { status: 'accepted', endDate: { gte: new Date() } }
+  let popularRaw = [];
+  try {
+    popularRaw = await (prisma as any).item.findMany({
+      take: 5,
+      include: { 
+        owner: true,
+        requests: {
+          where: { status: 'accepted', endDate: { gte: new Date() } }
+        },
+        _count: {
+          select: { requests: true }
+        }
       },
-      _count: {
-        select: { requests: true }
+      orderBy: {
+        requests: {
+          _count: 'desc'
+        }
       }
-    },
-    orderBy: {
-      requests: {
-        _count: 'desc'
-      }
-    }
-  });
+    });
+  } catch (error) {
+    console.error("Database error fetching popular items:", error);
+    popularRaw = [];
+  }
 
   const recentlyAdded = recentlyAddedRaw as unknown as Item[];
   const popularItems = popularRaw as unknown as Item[];

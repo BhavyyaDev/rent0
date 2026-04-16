@@ -20,18 +20,24 @@ export default async function ExplorePage(props: {
   }
 
   // Fetch items from the database with filtered order
-  const rawItems = await prisma.item.findMany({
-    include: { 
-      owner: true,
-      requests: {
-        where: {
-          status: 'accepted',
-          endDate: { gte: new Date() }
+  let rawItems = [];
+  try {
+    rawItems = await prisma.item.findMany({
+      include: { 
+        owner: true,
+        requests: {
+          where: {
+            status: 'accepted',
+            endDate: { gte: new Date() }
+          }
         }
-      }
-    },
-    orderBy,
-  });
+      },
+      orderBy,
+    });
+  } catch (error) {
+    console.error("Database error:", error);
+    rawItems = [];
+  }
 
   const items = rawItems as unknown as Item[];
 
