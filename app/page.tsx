@@ -244,11 +244,6 @@ export default async function Home() {
                   Start Exploring
                 </Button>
               </Link>
-              <Link href="/items/add">
-                <Button variant="ghost" className="rounded-full h-16 px-10 border-white/20 text-white hover:bg-white/10 text-lg font-black active:scale-95 transition-all duration-200 ease-in-out">
-                  List Your Gear
-                </Button>
-              </Link>
             </div>
           </div>
         </div>
