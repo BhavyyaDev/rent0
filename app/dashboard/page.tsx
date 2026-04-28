@@ -19,7 +19,7 @@ export default async function DashboardPage() {
     redirect('/sign-in');
   }
 
-  // Ensure all request statuses are current based on the clock
+  // Ensure all request statuses are current based on the cloc
   await syncRequestStatuses();
 
   // Get global user details and read Postgres role string

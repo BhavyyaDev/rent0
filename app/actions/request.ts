@@ -85,7 +85,7 @@ export async function updateRequestStatus(requestId: string, status: string) {
     });
 
     if (!existingRequest || existingRequest.item.ownerId !== user.id) {
-       return { error: 'Hmm, you do not seem to have permission to do that.' };
+      return { error: 'Hmm, you do not seem to have permission to do that.' };
     }
 
     // NEW: If accepting, check for date conflicts first
@@ -107,7 +107,7 @@ export async function updateRequestStatus(requestId: string, status: string) {
 
     await (prisma as any).request.update({
       where: { id: requestId },
-      data: { 
+      data: {
         status,
       },
     });
@@ -154,11 +154,11 @@ export async function deleteRequest(requestId: string) {
     });
 
     if (!existingRequest || existingRequest.renterId !== user.id) {
-       return { error: 'Hmm, you do not seem to have permission to do that.' };
+      return { error: 'Hmm, you do not seem to have permission to do that.' };
     }
 
     if (existingRequest.status !== 'pending') {
-       return { error: 'You can only cancel pending requests. If already accepted, please contact the owner.' };
+      return { error: 'You can only cancel pending requests. If already accepted, please contact the owner.' };
     }
 
     await (prisma as any).request.delete({
@@ -185,11 +185,11 @@ export async function updateRequestDates(requestId: string, startDate: string | 
     });
 
     if (!existingRequest || existingRequest.renterId !== user.id) {
-       return { error: 'Hmm, you do not seem to have permission to do that.' };
+      return { error: 'Hmm, you do not seem to have permission to do that.' };
     }
 
     if (existingRequest.status !== 'pending') {
-       return { error: 'You can only edit pending requests.' };
+      return { error: 'You can only edit pending requests.' };
     }
 
     const parsedStart = new Date(startDate);
@@ -251,7 +251,7 @@ export async function syncRequestStatuses() {
         where: {
           id: { in: toComplete.map((r: any) => r.id) }
         },
-        data: { 
+        data: {
           status: 'completed',
         }
       });
@@ -400,11 +400,11 @@ export async function createCheckoutSession(requestId: string) {
     });
 
     if (!request || request.renterId !== user.id) {
-       return { error: 'Unauthorized' };
+      return { error: 'Unauthorized' };
     }
 
     if (request.status !== 'accepted') {
-       return { error: 'Invalid state' };
+      return { error: 'Invalid state' };
     }
 
     if (request.paymentStatus === 'paid') {
@@ -417,7 +417,7 @@ export async function createCheckoutSession(requestId: string) {
     const totalPrice = days * request.item.pricePerDay;
 
     // Use absolute URL for Stripe redirect
-    // Use localhost for local dev if NEXT_PUBLIC_APP_URL is not set
+    // Use localhost for local dev if NEXT_PUBLIC_APP_URL is not setx
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
     const session = await stripe.checkout.sessions.create({
@@ -440,8 +440,8 @@ export async function createCheckoutSession(requestId: string) {
         requestId,
         renterId: user.id,
       },
-      success_url: `${baseUrl}/checkout?status=success&requestId=${requestId}`,
-      cancel_url: `${baseUrl}/dashboard`,
+      success_url: `${baseUrl}/dashboard?payment=success&requestId=${requestId}`,
+      cancel_url: `${baseUrl}/dashboard?payment=cancelled`,
     });
 
     console.log(`[Stripe] Checkout session created: ${session.id} for Request ${requestId}`);
@@ -452,40 +452,34 @@ export async function createCheckoutSession(requestId: string) {
   }
 }
 
-import { auth } from '@clerk/nextjs/server';
-
 /**
- * Handle successful payment confirmation.
+ * Handle successful mock payment.
  */
 export async function confirmPayment(requestId: string) {
-  const { userId } = await auth();
-
-  if (!userId) throw new Error("Unauthorized");
+  const user = await currentUser();
+  if (!user) return { error: 'Authentication required' };
 
   try {
     const request = await (prisma as any).request.findUnique({
       where: { id: requestId }
     });
 
-    if (!request) throw new Error("Request not found");
-
-    if (request.renterId !== userId) {
-      throw new Error("Not allowed");
+    if (!request || request.renterId !== user.id) {
+      return { error: 'Permission denied' };
     }
 
-    const updated = await (prisma as any).request.update({
+    await (prisma as any).request.update({
       where: { id: requestId },
-      data: { 
+      data: {
         paymentStatus: 'paid',
         escrowStatus: 'held'
       }
     });
 
     revalidatePath('/dashboard');
-    return updated;
+    return { success: true };
   } catch (err) {
-    console.error(`[Payment Confirmation] Failed for ${requestId}:`, err);
-    throw err;
+    return { error: 'Failed to confirm payment' };
   }
 }
 
@@ -513,7 +507,7 @@ export async function markAsActive(requestId: string) {
 
     await (prisma as any).request.update({
       where: { id: requestId },
-      data: { 
+      data: {
         status: 'active',
         escrowStatus: 'released'
       }
@@ -577,7 +571,7 @@ export async function markAsCompleted(requestId: string) {
 
     await (prisma as any).request.update({
       where: { id: requestId },
-      data: { 
+      data: {
         status: 'completed',
       }
     });
