@@ -34,8 +34,11 @@ export default async function ExplorePage(props: {
       },
       orderBy,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Database error:", error);
+    try {
+      require('fs').writeFileSync('/tmp/rento-db-error.log', String(error) + '\n' + (error.stack || ''));
+    } catch(e) {}
     rawItems = [];
   }
 
