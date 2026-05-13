@@ -11,6 +11,16 @@ export async function createItem(prevState: any, formData: FormData) {
     return { error: 'You must be logged in to create an item.' };
   }
 
+  // Verify the user is a lender in the database — client role state cannot be trusted
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { role: true },
+  });
+
+  if (!dbUser || dbUser.role !== 'lender') {
+    return { error: 'Only lenders can create listings. Switch to lender mode in your dashboard.' };
+  }
+
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
   const pricePerDay = parseFloat(formData.get('pricePerDay') as string);

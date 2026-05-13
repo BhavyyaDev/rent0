@@ -46,25 +46,52 @@ export default async function DashboardPage() {
 
   // Fetch incoming rental requests for items owned by this user
   const incomingRequests = await (prisma as any).request.findMany({
-    where: {
+    where: { item: { ownerId: userId } },
+    select: {
+      id: true,
+      startDate: true,
+      endDate: true,
+      status: true,
+      paymentStatus: true,
       item: {
-        ownerId: userId,
+        select: {
+          title: true,
+          pricePerDay: true,
+        },
+      },
+      renter: {
+        select: {
+          name: true,
+          email: true,
+          trustScore: true,
+        },
       },
     },
-    include: {
-      item: true,
-      renter: true,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
+    orderBy: { createdAt: 'desc' },
   });
 
   // Fetch outgoing rental requests made by this user (Renter View)
   const outgoingRequests = await (prisma as any).request.findMany({
     where: { renterId: userId },
-    include: {
-      item: { include: { owner: true } }
+    select: {
+      id: true,
+      startDate: true,
+      endDate: true,
+      status: true,
+      paymentStatus: true,
+      item: {
+        select: {
+          id: true,
+          title: true,
+          pricePerDay: true,
+          owner: {
+            select: {
+              name: true,
+              trustScore: true,
+            },
+          },
+        },
+      },
     },
     orderBy: { createdAt: 'desc' },
   });

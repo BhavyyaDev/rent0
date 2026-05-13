@@ -1,5 +1,5 @@
 import { ItemCard, Item } from '@/components/item-card';
-import { Package, Camera, Speaker, Gamepad2, Sparkles, Search as SearchIcon } from 'lucide-react';
+import { Package, Camera, Speaker, Gamepad2, Sparkles, Search as SearchIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
@@ -7,42 +7,46 @@ import { SortControl } from '@/components/sort-control';
 
 export const dynamic = "force-dynamic";
 
+const PAGE_SIZE = 12;
+
 export default async function ExplorePage(props: {
-  searchParams: Promise<{ sort?: string }>;
+  searchParams: Promise<{ sort?: string; page?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const sort = searchParams.sort || 'newest';
+  const page = Math.max(0, parseInt(searchParams.page || '0', 10) || 0);
 
-  // Determine sort order
   let orderBy: any = { createdAt: 'desc' };
   if (sort === 'price-low') {
     orderBy = { pricePerDay: 'asc' };
   }
 
-  // Fetch items from the database with filtered order
   let rawItems: any[] = [];
+  let totalCount = 0;
   try {
-    rawItems = await prisma.item.findMany({
-      include: { 
-        owner: true,
-        requests: {
-          where: {
-            status: 'accepted',
-            endDate: { gte: new Date() }
+    [rawItems, totalCount] = await Promise.all([
+      prisma.item.findMany({
+        include: {
+          owner: true,
+          requests: {
+            where: { status: 'accepted', endDate: { gte: new Date() } }
           }
-        }
-      },
-      orderBy,
-    });
+        },
+        orderBy,
+        take: PAGE_SIZE,
+        skip: page * PAGE_SIZE,
+      }),
+      prisma.item.count(),
+    ]);
   } catch (error: any) {
     console.error("Database error:", error);
     try {
       require('fs').writeFileSync('/tmp/rento-db-error.log', String(error) + '\n' + (error.stack || ''));
     } catch(e) {}
-    rawItems = [];
   }
 
   const items = rawItems as unknown as Item[];
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   return (
     <div className="w-full min-h-[calc(100vh-4rem)] bg-[#F8FAFC]">
@@ -127,11 +131,43 @@ export default async function ExplorePage(props: {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 animate-in fade-in slide-in-from-bottom-3 duration-700">
-            {items.map((item) => (
-              <ItemCard key={item.id} item={item} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 animate-in fade-in slide-in-from-bottom-3 duration-700">
+              {items.map((item) => (
+                <ItemCard key={item.id} item={item} />
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 mt-14">
+                {page > 0 ? (
+                  <Link href={`/explore?sort=${sort}&page=${page - 1}`}>
+                    <Button variant="outline" className="gap-1.5">
+                      <ChevronLeft className="w-4 h-4" /> Previous
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button variant="outline" disabled className="gap-1.5">
+                    <ChevronLeft className="w-4 h-4" /> Previous
+                  </Button>
+                )}
+                <span className="text-sm font-semibold text-slate-500 px-2">
+                  Page {page + 1} of {totalPages}
+                </span>
+                {page < totalPages - 1 ? (
+                  <Link href={`/explore?sort=${sort}&page=${page + 1}`}>
+                    <Button variant="outline" className="gap-1.5">
+                      Next <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button variant="outline" disabled className="gap-1.5">
+                    Next <ChevronRight className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

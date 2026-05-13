@@ -1,37 +1,52 @@
 import { ItemCard, Item } from '@/components/item-card';
-import { Camera, Speaker, Gamepad2, Sparkles, Search as SearchIcon } from 'lucide-react';
+import { Camera, Speaker, Gamepad2, Sparkles, Search as SearchIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CategoryBar } from '@/components/category-bar';
 import { SearchFilters } from '@/components/search-filters';
 import { syncUser } from '@/lib/syncUser';
 import { prisma } from '@/lib/db';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 // force dynamic page
 export const dynamic = "force-dynamic";
 
+const PAGE_SIZE = 12;
+
 export default async function SearchPage(props: { searchParams?: Promise<{ [key: string]: string | undefined }> }) {
   // Synchronize authenticated user
   const user = await syncUser();
-  
-  // Initialize variables outside try block for scoping
+
   let items: Item[] = [];
+  let totalCount = 0;
   let categoryFilter = '';
   let q = '';
+  let sort = 'newest';
+  let page = 0;
   let isDateFiltering = false;
   let parsedStartDate: Date | undefined;
   let parsedEndDate: Date | undefined;
+  // Preserve all filter params for pagination links
+  let filterParams: Record<string, string> = {};
 
   try {
-    // Safely await robust searchParams intercepting undefined completely
     const searchParams = (await props.searchParams) || {};
     const categoryParamArray = searchParams.category;
-    // Handle potential arrays from query params safely
     const categoryParam = Array.isArray(categoryParamArray) ? categoryParamArray[0] : categoryParamArray;
     categoryFilter = categoryParam || '';
     q = String(searchParams.q || '').trim();
-    const sort = searchParams.sort || 'newest';
+    sort = searchParams.sort || 'newest';
+    page = Math.max(0, parseInt(searchParams.page || '0', 10) || 0);
     const startDateParam = searchParams.startDate;
     const endDateParam = searchParams.endDate;
+
+    // Build params object to forward through pagination links (excludes page)
+    if (categoryFilter) filterParams.category = categoryFilter;
+    if (q) filterParams.q = q;
+    if (sort !== 'newest') filterParams.sort = sort;
+    if (startDateParam) filterParams.startDate = startDateParam;
+    if (endDateParam) filterParams.endDate = endDateParam;
+    if (searchParams.minPrice) filterParams.minPrice = searchParams.minPrice;
+    if (searchParams.maxPrice) filterParams.maxPrice = searchParams.maxPrice;
 
     if (startDateParam && endDateParam) {
       const s = new Date(startDateParam);
@@ -43,18 +58,16 @@ export default async function SearchPage(props: { searchParams?: Promise<{ [key:
       }
     }
 
-    // Use safe parsing for numeric filters
     const minPriceStr = searchParams.minPrice;
     const maxPriceStr = searchParams.maxPrice;
     const minPrice = minPriceStr ? parseInt(minPriceStr) : undefined;
     const maxPrice = maxPriceStr ? parseInt(maxPriceStr) : undefined;
 
-    // Build a robust whereClause following strict category requirements
     const whereClause: any = {
       category: categoryParam || undefined,
     };
     const conditions: any[] = [];
-    
+
     if (q) {
       conditions.push({
         OR: [
@@ -63,10 +76,7 @@ export default async function SearchPage(props: { searchParams?: Promise<{ [key:
         ]
       });
     }
-    
 
-
-    // NEW: Date-based availability filtering (Overlap exclusion)
     if (isDateFiltering && parsedStartDate && parsedEndDate) {
       conditions.push({
         requests: {
@@ -95,30 +105,36 @@ export default async function SearchPage(props: { searchParams?: Promise<{ [key:
       orderBy = { pricePerDay: 'asc' };
     } else if (sort === 'price_desc') {
       orderBy = { pricePerDay: 'desc' };
-    } else {
-      orderBy = { createdAt: 'desc' };
     }
 
-    // Fetch real items strictly through verified clauses
-    const rawItems = await (prisma as any).item.findMany({
-      where: whereClause,
-      include: { 
-        owner: true,
-        requests: {
-          where: {
-            status: 'accepted',
-            endDate: { gte: new Date() }
+    const [rawItems, count] = await Promise.all([
+      (prisma as any).item.findMany({
+        where: whereClause,
+        include: {
+          owner: true,
+          requests: {
+            where: { status: 'accepted', endDate: { gte: new Date() } }
           }
-        }
-      },
-      orderBy,
-    });
+        },
+        orderBy,
+        take: PAGE_SIZE,
+        skip: page * PAGE_SIZE,
+      }),
+      (prisma as any).item.count({ where: whereClause }),
+    ]);
 
     items = rawItems as unknown as Item[];
+    totalCount = count;
   } catch (error) {
     console.error(`[Search Page] Critical Error:`, error);
-    // On error, fallback to empty array to prevent 500 crash
     items = [];
+  }
+
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+  function buildPageUrl(targetPage: number) {
+    const params = new URLSearchParams({ ...filterParams, page: String(targetPage) });
+    return `/search?${params.toString()}`;
   }
 
   return (
@@ -218,23 +234,53 @@ export default async function SearchPage(props: { searchParams?: Promise<{ [key:
             <div className="mb-10 flex items-center justify-between">
               <div>
                 <h2 className="text-[28px] font-extrabold tracking-tight text-[#222222]">
-                  {q 
+                  {q
                     ? `Results for "${q}"`
-                    : categoryFilter 
-                      ? `${categoryFilter.charAt(0).toUpperCase() + categoryFilter.slice(1)} Gear` 
+                    : categoryFilter
+                      ? `${categoryFilter.charAt(0).toUpperCase() + categoryFilter.slice(1)} Gear`
                       : 'Explore all gear'}
                 </h2>
                 <p className="text-[#717171] font-medium mt-1">
-                  Showing {items.length} incredibly unique {items.length === 1 ? 'item' : 'items'} available for rent.
+                  {totalCount} {totalCount === 1 ? 'item' : 'items'} available for rent.
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 mb-20 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 mb-12 animate-in fade-in slide-in-from-bottom-2 duration-500">
               {items.map((item) => (
                 <ItemCard key={item.id} item={item} />
               ))}
             </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 mb-20">
+                {page > 0 ? (
+                  <Link href={buildPageUrl(page - 1)}>
+                    <Button variant="outline" className="gap-1.5">
+                      <ChevronLeft className="w-4 h-4" /> Previous
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button variant="outline" disabled className="gap-1.5">
+                    <ChevronLeft className="w-4 h-4" /> Previous
+                  </Button>
+                )}
+                <span className="text-sm font-semibold text-slate-500 px-2">
+                  Page {page + 1} of {totalPages}
+                </span>
+                {page < totalPages - 1 ? (
+                  <Link href={buildPageUrl(page + 1)}>
+                    <Button variant="outline" className="gap-1.5">
+                      Next <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button variant="outline" disabled className="gap-1.5">
+                    Next <ChevronRight className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
