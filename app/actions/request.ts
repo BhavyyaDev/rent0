@@ -468,6 +468,16 @@ export async function confirmPayment(requestId: string) {
       return { error: 'Permission denied' };
     }
 
+    // Must be in accepted state before payment can be confirmed
+    if (request.status !== 'accepted') {
+      return { error: 'Invalid state' };
+    }
+
+    // Idempotency: no-op if already confirmed
+    if (request.paymentStatus === 'paid') {
+      return { success: true };
+    }
+
     await (prisma as any).request.update({
       where: { id: requestId },
       data: {
@@ -479,6 +489,7 @@ export async function confirmPayment(requestId: string) {
     revalidatePath('/dashboard');
     return { success: true };
   } catch (err) {
+    console.error(`[Request Action] confirmPayment failed for ${requestId}:`, err);
     return { error: 'Failed to confirm payment' };
   }
 }
@@ -524,6 +535,9 @@ export async function markAsActive(requestId: string) {
  * Fetch detailed request info for checkout.
  */
 export async function getRequestDetails(requestId: string) {
+  const user = await currentUser();
+  if (!user) return { error: 'Authentication required' };
+
   try {
     const request = await (prisma as any).request.findUnique({
       where: { id: requestId },
@@ -531,6 +545,11 @@ export async function getRequestDetails(requestId: string) {
     });
 
     if (!request) return { error: 'Request not found' };
+
+    // Only the renter or the item owner may view request details
+    if (request.renterId !== user.id && request.item.ownerId !== user.id) {
+      return { error: 'Unauthorized' };
+    }
 
     const start = new Date(request.startDate);
     const end = new Date(request.endDate);
@@ -544,6 +563,7 @@ export async function getRequestDetails(requestId: string) {
       days,
     };
   } catch (err) {
+    console.error(`[Request Action] getRequestDetails failed for ${requestId}:`, err);
     return { error: 'Failed to fetch request details' };
   }
 }

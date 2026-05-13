@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { ArrowLeft, ShieldCheck, Camera } from 'lucide-react';
 import { prisma } from '@/lib/db';
 import { BookingWidget } from '@/components/booking-widget';
-import { syncRequestStatuses } from '@/app/actions/request';
 
 export const dynamic = "force-dynamic";
 
@@ -14,9 +13,6 @@ export default async function ItemDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-
-  // Sync statuses for accuracy
-  await syncRequestStatuses();
 
   const item = await prisma.item.findUnique({
     where: { id },
