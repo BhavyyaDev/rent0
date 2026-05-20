@@ -35,6 +35,11 @@ export default async function RootLayout({
   const rawUrl = headerList.get('x-url') || '';
   const pathname = rawUrl ? new URL(rawUrl).pathname : '';
 
+  // Auth pages are standalone — no navbar, no layout chrome
+  const isAuthPage = pathname
+    ? (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up'))
+    : false;
+
   if (user) {
     globalRole = 'onboarding';
     // Sync the user to ensure they exist in DB
@@ -45,19 +50,20 @@ export default async function RootLayout({
 
     // Ensure we have a reliable pathname before attempting mandatory onboarding redirects
     const isOnboardingPage = pathname.toLowerCase().includes('/onboarding');
-    
+
     if (globalRole === 'onboarding' && pathname && !isOnboardingPage) {
       redirect('/onboarding');
     }
   }
 
+  const showNavbar = !isAuthPage && globalRole !== 'onboarding';
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#F8FAFC] min-h-screen`}>
         <ClerkProvider>
-          {/* Hide Navbar during onboarding for a cleaner focused experience */}
-          {globalRole !== 'onboarding' && <Navbar role={globalRole} />}
-          <main className="min-h-[calc(100vh-4rem)]">
+          {showNavbar && <Navbar role={globalRole} />}
+          <main className={showNavbar ? 'min-h-[calc(100vh-4rem)]' : 'min-h-screen'}>
             {children}
           </main>
         </ClerkProvider>

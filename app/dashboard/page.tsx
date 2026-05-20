@@ -3,346 +3,667 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { DashboardItemCard } from '@/components/dashboard-item-card';
 import { RequestActionButtons } from '@/components/request-action-buttons';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { PlusCircle, ShoppingBag, Package, Activity, Banknote, Search, XCircle, ShieldCheck, Tag, Calendar } from 'lucide-react';
+import {
+  PlusCircle,
+  ShoppingBag,
+  Package,
+  Activity,
+  Banknote,
+  Search,
+  ShieldCheck,
+  Camera,
+  Clock,
+  Star,
+} from 'lucide-react';
 import { Item } from '@/components/item-card';
 import { RoleToggle } from '@/components/role-toggle';
 import { syncRequestStatuses } from '@/app/actions/request';
+import { EditRequestModal } from '@/components/edit-request-modal';
+import { DeleteRequestButton } from '@/components/delete-request-button';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab = 'all' } = await searchParams;
   const { userId } = await auth();
+  if (!userId) redirect('/sign-in');
 
-  if (!userId) {
-    redirect('/sign-in');
-  }
-
-  // Ensure all request statuses are current based on the cloc
   await syncRequestStatuses();
 
-  // Get global user details and read Postgres role string
   const currentUser = await (prisma as any).user.findUnique({ where: { id: userId } });
   const role = currentUser?.role || 'renter';
 
-  // Fetch items owned by the current user
   const rawItems = await prisma.item.findMany({
     where: { ownerId: userId },
     include: {
       owner: true,
-      requests: {
-        where: {
-          status: 'accepted',
-          endDate: { gte: new Date() }
-        }
-      }
+      requests: { where: { status: 'accepted', endDate: { gte: new Date() } } },
     },
     orderBy: { createdAt: 'desc' },
   });
-
-  // Type cast to match the Item interface
   const items = rawItems as unknown as Item[];
 
-  // Fetch incoming rental requests for items owned by this user
   const incomingRequests = await (prisma as any).request.findMany({
-    where: {
-      item: {
-        ownerId: userId,
-      },
-    },
-    include: {
-      item: true,
-      renter: true,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
-
-  // Fetch outgoing rental requests made by this user (Renter View)
-  const outgoingRequests = await (prisma as any).request.findMany({
-    where: { renterId: userId },
-    include: {
-      item: { include: { owner: true } }
-    },
+    where: { item: { ownerId: userId } },
+    include: { item: true, renter: true },
     orderBy: { createdAt: 'desc' },
   });
 
-  const totalListings = items.length;
+  const outgoingRequests = await (prisma as any).request.findMany({
+    where: { renterId: userId },
+    include: { item: { include: { owner: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  // Lender stats
+  const totalListings  = items.length;
   const activeListings = items.length;
-  // Estimated mock value calculation
-  const estimatedValue = items.reduce((acc, item) => acc + (item.pricePerDay * 10), 0);
+  const estimatedValue = items.reduce((acc, item) => acc + item.pricePerDay * 10, 0);
+
+  // Renter stats
+  const totalRentals   = outgoingRequests.length;
+  const activeRentals  = outgoingRequests.filter((r: any) => r.status === 'active').length;
+  const pendingRentals = outgoingRequests.filter((r: any) => r.status === 'pending').length;
+
+  // Status tab filtering
+  const filteredRequests = tab === 'all'
+    ? outgoingRequests
+    : outgoingRequests.filter((req: any) => {
+        if (tab === 'pending')   return req.status === 'pending' || req.status === 'accepted';
+        if (tab === 'active')    return req.status === 'active';
+        if (tab === 'completed') return req.status === 'completed' || req.status === 'rejected';
+        return true;
+      });
+
+  // Recommended items (renter view)
+  const recommended = await prisma.item.findMany({
+    where: { ownerId: { not: userId } },
+    take: 3,
+    orderBy: { createdAt: 'desc' },
+    include: { owner: true },
+  });
+
+  const calcDays = (start: string, end: string) =>
+    Math.ceil(Math.abs(new Date(end).getTime() - new Date(start).getTime()) / (1000 * 3600 * 24)) || 1;
+
+  const daysRemaining = (end: string) =>
+    // eslint-disable-next-line react-hooks/purity
+    Math.ceil((new Date(end).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+  const getStatusBadge = (status: string, paymentStatus: string) => {
+    if (status === 'pending')
+      return { label: 'Pending Review', cls: 'bg-amber-50 text-amber-700 border border-amber-200' };
+    if (status === 'accepted' && paymentStatus !== 'paid')
+      return { label: 'Payment Due', cls: 'bg-orange-50 text-orange-700 border border-orange-200' };
+    if (status === 'accepted' && paymentStatus === 'paid')
+      return { label: 'Ready for Pickup', cls: 'bg-blue-50 text-blue-700 border border-blue-200' };
+    if (status === 'active')
+      return { label: 'Active', cls: 'bg-[#d4f07a]/20 text-[#3d4d00] border border-[#d4f07a]/50' };
+    if (status === 'completed')
+      return { label: 'Completed', cls: 'bg-gray-100 text-gray-600 border border-gray-200' };
+    if (status === 'rejected')
+      return { label: 'Declined', cls: 'bg-red-50 text-red-600 border border-red-200' };
+    return { label: status, cls: 'bg-gray-100 text-gray-600 border border-gray-200' };
+  };
+
+  const TABS = [
+    { label: 'All',       value: 'all' },
+    { label: 'Pending',   value: 'pending' },
+    { label: 'Active',    value: 'active' },
+    { label: 'Completed', value: 'completed' },
+  ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-20">
-      {/* Header wrapper for background fill */}
-      <div className="bg-white border-b border-slate-200/60 py-20">
-        <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-10">
-            <div className="flex flex-col gap-2">
-              <h1 className="text-[36px] md:text-[52px] font-black tracking-tighter text-slate-950 leading-none">Dashboard</h1>
-              <p className="text-xl text-slate-500 font-bold max-w-2xl leading-relaxed">Your complete marketplace summary and inventory management.</p>
-            </div>
+    <div className="min-h-screen bg-[#f9fafb] relative overflow-x-hidden pb-24">
 
-            <div className="flex items-center gap-4">
-              <RoleToggle currentRole={role} />
+      {/* ── Background orbs ───────────────────────────────────── */}
+      <div
+        className="orb w-[500px] h-[500px] bg-[#d4f07a]"
+        style={{ top: '-120px', right: '-100px', opacity: 0.12, filter: 'blur(120px)' }}
+      />
+      <div
+        className="orb w-[400px] h-[400px] bg-blue-200"
+        style={{ bottom: '10%', left: '-80px', opacity: 0.12, filter: 'blur(120px)' }}
+      />
 
-              {role === 'lender' && (
-                <Link href="/items/add">
-                  <Button className="rounded-full h-15 px-8 text-base font-black shadow-md transition-all duration-200 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95">
-                    <PlusCircle className="w-5 h-5" /> List New Gear
-                  </Button>
-                </Link>
-              )}
-            </div>
+      {/* ── Hero ─────────────────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-6 pt-16 pb-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-3">
+              {role === 'lender' ? 'Lender' : 'Renter'} Dashboard
+            </p>
+            <h1 className="text-6xl md:text-7xl font-extrabold text-[#1a1a1a] tracking-[-0.04em] mb-3">
+              Dashboard
+            </h1>
+            <p className="text-lg text-gray-500 max-w-xl leading-relaxed font-medium">
+              {role === 'lender'
+                ? 'Manage your inventory and fulfill incoming rental requests.'
+                : 'Track the status of gear you want to rent from others.'}
+            </p>
           </div>
 
-          {/* Stats Section - Lender Only */}
-          {role === 'lender' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-              {/* Total Listings Card */}
-              <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm flex items-center gap-5 hover:shadow-md transition-all duration-200">
-                <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-                  <Package className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-slate-400 font-bold text-[11px] uppercase tracking-[0.2em] mb-1">Total Listings</p>
-                  <p className="text-4xl font-black text-slate-950">{totalListings}</p>
-                </div>
-              </div>
-
-              {/* Active Listings Card */}
-              <div className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.04)] flex items-center gap-5">
-                <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center shrink-0">
-                  <Activity className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-slate-400 font-bold text-[11px] uppercase tracking-[0.2em] mb-1">Active Listings</p>
-                  <p className="text-4xl font-black text-slate-950">{activeListings}</p>
-                </div>
-              </div>
-
-              {/* Estimated Value Card */}
-              <div className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.04)] flex items-center gap-5">
-                <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-                  <Banknote className="w-6 h-6 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-slate-400 font-bold text-[11px] uppercase tracking-[0.2em] mb-1">Estimated Value</p>
-                  <div className="flex items-baseline gap-1">
-                    <p className="text-4xl font-black text-slate-950">₹{estimatedValue.toLocaleString()}</p>
-                    <span className="text-slate-500 font-bold text-sm">/mo</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          <div className="flex items-center gap-4 flex-shrink-0">
+            <RoleToggle currentRole={role} />
+            {role === 'lender' && (
+              <Link href="/items/add">
+                <button className="bg-[#d4f07a] text-[#1a1a1a] px-7 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-md">
+                  <PlusCircle className="w-4 h-4" /> List New Gear
+                </button>
+              </Link>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Main Content Area */}
-      <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 mt-20 flex flex-col gap-24">
-
-        {/* --- LENDER VIEW (OWNER ROLE) --- */}
+        {/* ── Lender stats ───────────────────────────────────── */}
         {role === 'lender' && (
-          <section className="flex flex-col gap-10">
-            <div className="border-b-2 border-slate-200 pb-6 text-left">
-              <h2 className="text-[32px] font-black text-slate-950 tracking-tighter">Lender Dashboard</h2>
-              <p className="text-slate-500 font-bold mt-2">Manage your inventory and fulfill incoming rental requests.</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            <div className="glass-panel lime-glow rounded-3xl p-6 flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-[#d4f07a]/20 flex items-center justify-center flex-shrink-0">
+                <Package className="w-7 h-7 text-[#526600]" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Total Listings</p>
+                <p className="text-4xl font-black text-[#1a1a1a]">{totalListings}</p>
+              </div>
             </div>
 
-            {/* Incoming Requests Section */}
-            {incomingRequests && incomingRequests.length > 0 && (
+            <div className="glass-panel lime-glow rounded-3xl p-6 flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-green-100/60 flex items-center justify-center flex-shrink-0">
+                <Activity className="w-7 h-7 text-green-700" />
+              </div>
               <div>
-                <h3 className="text-[20px] font-extrabold text-[#222222] mb-5">Incoming Bookings</h3>
-                <div className="bg-white rounded-[24px] border border-slate-200 overflow-hidden shadow-sm overflow-x-auto">
-                  <table className="w-full text-left border-collapse min-w-[700px]">
-                    <thead>
-                      <tr className="bg-slate-50/50 border-b-2 border-slate-200 text-[11px] tracking-[0.2em] text-slate-400 uppercase font-black">
-                        <th className="p-6">ITEM</th>
-                        <th className="p-6">RENTER</th>
-                        <th className="p-6">DATES</th>
-                        <th className="p-6 text-right">EARNINGS</th>
-                        <th className="p-6">STATUS</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {incomingRequests.map((req: any) => (
-                        <tr key={req.id} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="p-5">
-                            <div className="font-bold text-slate-900 line-clamp-1">{req.item.title}</div>
-                            <div className="text-sm font-medium text-emerald-600">₹{req.item.pricePerDay}/day</div>
-                          </td>
-                          <td className="p-5">
-                            <div className="flex items-center gap-2">
-                              <div className="font-bold text-slate-900">{req.renter.name || 'Verified Renter'}</div>
-                              <ShieldCheck className="w-4 h-4 text-emerald-500 fill-emerald-50" />
-                            </div>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <div className="text-[12px] font-bold text-slate-500">{req.renter.email}</div>
-                              <span className="w-1 h-1 bg-slate-300 rounded-full" />
-                              <span className="text-[11px] font-bold text-amber-600">Trust {req.renter.trustScore}%</span>
-                            </div>
-                          </td>
-                          <td className="p-5 text-slate-600 font-bold whitespace-nowrap text-sm">
-                            {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
-                          </td>
-                          <td className="p-5 text-right">
-                            {(() => {
-                              const start = new Date(req.startDate);
-                              const end = new Date(req.endDate);
-                              const days = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 3600 * 24)) || 1;
-                              const estimate = days * req.item.pricePerDay;
-                              return (
-                                <div className="font-extrabold text-[#222222]">₹{estimate.toLocaleString()}</div>
-                              );
-                            })()}
-                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Est. Earnings</div>
-                          </td>
-                          <td className="p-5 w-40">
-                            <RequestActionButtons 
-                              requestId={req.id} 
-                              status={req.status} 
-                              isOwner={true} 
-                              paymentStatus={req.paymentStatus}
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Active Listings</p>
+                <p className="text-4xl font-black text-[#1a1a1a]">{activeListings}</p>
+              </div>
+            </div>
+
+            <div className="glass-panel lime-glow rounded-3xl p-6 flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-[#d4f07a]/20 flex items-center justify-center flex-shrink-0">
+                <Banknote className="w-7 h-7 text-[#526600]" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Estimated Value</p>
+                <div className="flex items-baseline gap-1">
+                  <p className="text-4xl font-black text-[#1a1a1a]">₹{estimatedValue.toLocaleString()}</p>
+                  <span className="text-sm font-bold text-gray-400">/mo</span>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Renter stats ───────────────────────────────────── */}
+        {role === 'renter' && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            <div className="glass-panel lime-glow rounded-3xl p-6 flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-[#d4f07a]/20 flex items-center justify-center flex-shrink-0">
+                <ShoppingBag className="w-7 h-7 text-[#526600]" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Total Rentals</p>
+                <p className="text-4xl font-black text-[#1a1a1a]">{totalRentals}</p>
+              </div>
+            </div>
+
+            <div className="glass-panel lime-glow rounded-3xl p-6 flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-green-100/60 flex items-center justify-center flex-shrink-0">
+                <Activity className="w-7 h-7 text-green-700" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Active Now</p>
+                <p className="text-4xl font-black text-[#1a1a1a]">{activeRentals}</p>
+              </div>
+            </div>
+
+            <div className="glass-panel lime-glow rounded-3xl p-6 flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+                <Clock className="w-7 h-7 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Pending</p>
+                <p className="text-4xl font-black text-[#1a1a1a]">{pendingRentals}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ── Main Content ─────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-6 mt-10 flex flex-col gap-20">
+
+        {/* ════════════════ LENDER VIEW ════════════════ */}
+        {role === 'lender' && (
+          <>
+            {/* Incoming Requests */}
+            {incomingRequests.length > 0 && (
+              <section>
+                <div className="flex items-center gap-3 mb-6">
+                  <h2 className="text-2xl font-extrabold text-[#1a1a1a] tracking-tight">
+                    Incoming Bookings
+                  </h2>
+                  <span className="bg-[#d4f07a] text-[#1a1a1a] text-[10px] font-black px-3 py-1 rounded-full">
+                    {incomingRequests.length}
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  {incomingRequests.map((req: any) => {
+                    const days = calcDays(req.startDate, req.endDate);
+                    const earnings = days * req.item.pricePerDay;
+                    const left = daysRemaining(req.endDate);
+
+                    return (
+                      <div
+                        key={req.id}
+                        className="glass-panel rounded-3xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-5 hover:border-[#d4f07a]/50 transition-colors"
+                      >
+                        {/* Thumbnail */}
+                        <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
+                          {req.item.imageUrl ? (
+                            <img
+                              src={req.item.imageUrl}
+                              alt={req.item.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package className="w-8 h-8 text-gray-300" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-[#1a1a1a] text-base leading-tight line-clamp-1">
+                            {req.item.title}
+                          </h4>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-sm text-gray-500 font-medium">
+                              {req.renter.name || 'Renter'}
+                            </span>
+                            <ShieldCheck className="w-3.5 h-3.5 text-[#d4f07a]" />
+                            <span className="text-[11px] font-bold text-amber-600">
+                              Trust {req.renter.trustScore}%
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <span className="text-xs text-gray-400 font-medium">
+                              {new Date(req.startDate).toLocaleDateString()} →{' '}
+                              {new Date(req.endDate).toLocaleDateString()}
+                            </span>
+                            {req.status === 'active' && left >= 0 && (
+                              <span className="text-[10px] font-black text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                                {left}d remaining
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Earnings */}
+                        <div className="text-right flex-shrink-0">
+                          <p className="font-black text-[#1a1a1a] text-lg">
+                            ₹{earnings.toLocaleString()}
+                          </p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                            Est. Earnings
+                          </p>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex-shrink-0">
+                          <RequestActionButtons
+                            requestId={req.id}
+                            status={req.status}
+                            isOwner={true}
+                            paymentStatus={req.paymentStatus}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
             )}
 
-            {/* User Inventory Grid */}
-            {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-2xl border border-slate-200 shadow-sm mt-4 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500/20" />
-                <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-8">
-                  <ShoppingBag className="w-12 h-12 text-emerald-500" />
+            {/* My Listings */}
+            <section>
+              <h2 className="text-2xl font-extrabold text-[#1a1a1a] tracking-tight mb-6">
+                My Listings
+              </h2>
+
+              {items.length === 0 ? (
+                <div className="glass-panel rounded-3xl p-16 flex flex-col items-center justify-center text-center">
+                  <div className="w-20 h-20 rounded-full bg-[#d4f07a]/20 flex items-center justify-center mb-6">
+                    <ShoppingBag className="w-10 h-10 text-[#526600]" />
+                  </div>
+                  <h3 className="text-2xl font-black text-[#1a1a1a] mb-3 tracking-tight">
+                    Start earning from your gear
+                  </h3>
+                  <p className="text-gray-500 max-w-sm mb-10 leading-relaxed font-medium">
+                    Turn your idle equipment into professional earnings. List your first item to join the marketplace.
+                  </p>
+                  <Link href="/items/add">
+                    <button className="bg-[#d4f07a] text-[#1a1a1a] px-10 py-4 rounded-full font-bold text-base hover:scale-105 active:scale-95 transition-all shadow-md">
+                      List your first item
+                    </button>
+                  </Link>
                 </div>
-                <h3 className="text-3xl font-black text-slate-950 mb-3 tracking-tighter">
-                  Start earning from your gear
-                </h3>
-                <p className="text-[17px] text-slate-500 max-w-sm mx-auto mb-10 font-bold leading-relaxed">
-                  Turn your idle equipment into professional earnings. List your first item to join the marketplace.
-                </p>
-                <Link href="/items/add">
-                  <Button className="rounded-full h-15 px-10 text-lg font-black shadow-md bg-emerald-600 hover:bg-emerald-700 text-white transition-all active:scale-95 duration-200">
-                    List your first item
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              <div>
-                <h3 className="text-[20px] font-extrabold text-[#222222] mb-6">Your Inventory</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                   {items.map((item) => (
                     <DashboardItemCard key={item.id} item={item} />
                   ))}
+
+                  {/* Dashed Add New card */}
+                  <Link href="/items/add">
+                    <div className="rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-[#d4f07a] hover:bg-[#d4f07a]/5 transition-all aspect-[4/3] group">
+                      <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-[#d4f07a] transition-colors">
+                        <PlusCircle className="w-6 h-6 text-gray-400 group-hover:text-[#1a1a1a] transition-colors" />
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 group-hover:text-[#1a1a1a] transition-colors text-center px-4">
+                        Add New Listing
+                      </span>
+                    </div>
+                  </Link>
                 </div>
-              </div>
-            )}
-          </section>
+              )}
+            </section>
+          </>
         )}
 
-
-        {/* --- RENTER VIEW (CUSTOMER ROLE) --- */}
+        {/* ════════════════ RENTER VIEW ════════════════ */}
         {role === 'renter' && (
-          <section className="flex flex-col gap-10">
-            <div className="border-b border-slate-200 pb-5">
-              <h2 className="text-[28px] font-extrabold text-slate-950">Renter Dashboard</h2>
-              <p className="text-slate-500 font-medium mt-1">Track the status of gear you want to rent from others.</p>
-            </div>
+          <>
+            <section>
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-8">
+                <h2 className="text-2xl font-extrabold text-[#1a1a1a] tracking-tight">My Requests</h2>
+                {outgoingRequests.length > 0 && (
+                  <span className="bg-[#1a1a1a] text-white text-[10px] font-black px-3 py-1 rounded-full">
+                    {outgoingRequests.length}
+                  </span>
+                )}
+              </div>
 
-            {outgoingRequests && outgoingRequests.length > 0 ? (
-              <div>
-                <h3 className="text-[20px] font-black text-slate-950 mb-6">My Requests</h3>
-                <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm overflow-x-auto">
-                  <table className="w-full text-left border-collapse min-w-[800px]">
-                    <thead>
-                      <tr className="bg-slate-50 border-b-2 border-slate-200 text-[11px] tracking-[0.2em] text-slate-400 uppercase font-black">
-                        <th className="p-6">ITEM</th>
-                        <th className="p-6">OWNER</th>
-                        <th className="p-6">DATES</th>
-                        <th className="p-6 text-right">PROJECT COST</th>
-                        <th className="p-6">STATUS</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {outgoingRequests.map((req: any) => (
-                        <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="p-5">
-                            <Link href={`/items/${req.item.id}`} className="font-bold text-slate-900 line-clamp-1 hover:underline text-[15px]">{req.item.title}</Link>
-                            <div className="text-[13px] font-bold text-emerald-600 mt-0.5">₹{req.item.pricePerDay}/day</div>
-                          </td>
-                          <td className="p-5">
-                            <div className="flex items-center gap-2">
-                              <div className="font-bold text-slate-900 text-[14px]">{req.item.owner?.name || 'Verified Owner'}</div>
-                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 fill-emerald-50" />
+              {/* Status filter tabs */}
+              {outgoingRequests.length > 0 && (
+                <div className="flex gap-6 mb-8 border-b border-gray-200 overflow-x-auto">
+                  {TABS.map(({ label, value }) => {
+                    const isActive = tab === value;
+                    return (
+                      <Link
+                        key={value}
+                        href={`/dashboard?tab=${value}`}
+                        className={`pb-3 px-1 text-sm font-bold whitespace-nowrap relative transition-colors ${
+                          isActive ? 'text-[#1a1a1a]' : 'text-gray-400 hover:text-gray-600'
+                        }`}
+                      >
+                        {label}
+                        {isActive && (
+                          <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#d4f07a] rounded-full" />
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+
+              {outgoingRequests.length === 0 ? (
+                <div className="glass-panel rounded-3xl p-16 flex flex-col items-center justify-center text-center">
+                  <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-6">
+                    <Search className="w-10 h-10 text-gray-300" />
+                  </div>
+                  <h3 className="text-2xl font-black text-[#1a1a1a] mb-3 tracking-tight">
+                    Find gear for your next project
+                  </h3>
+                  <p className="text-gray-500 max-w-sm mb-10 leading-relaxed font-medium">
+                    Explore items and make your first rental. Find exactly what you need for your next adventure.
+                  </p>
+                  <Link href="/explore">
+                    <button className="bg-[#1a1a1a] text-white px-10 py-4 rounded-full font-bold text-base hover:bg-black active:scale-95 transition-all shadow-md">
+                      Start Exploring Gear
+                    </button>
+                  </Link>
+                </div>
+              ) : filteredRequests.length === 0 ? (
+                <div className="glass-panel rounded-3xl p-12 flex flex-col items-center justify-center text-center">
+                  <p className="text-gray-400 font-bold text-base">No {tab} requests yet.</p>
+                  <Link href={`/dashboard?tab=all`} className="mt-4 text-sm font-bold text-[#526600] hover:underline">
+                    View all requests
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {filteredRequests.map((req: any) => {
+                    const days = calcDays(req.startDate, req.endDate);
+                    const cost = days * req.item.pricePerDay;
+                    const left = daysRemaining(req.endDate);
+                    const badge = getStatusBadge(req.status, req.paymentStatus);
+
+                    return (
+                      <div
+                        key={req.id}
+                        className="glass-panel rounded-3xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-5 hover:border-[#d4f07a]/50 transition-colors"
+                      >
+                        {/* Thumbnail */}
+                        <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
+                          {req.item.imageUrl ? (
+                            <img
+                              src={req.item.imageUrl}
+                              alt={req.item.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package className="w-8 h-8 text-gray-300" />
                             </div>
-                            <div className="text-[11px] font-bold text-amber-600 mt-0.5">Trust {req.item.owner?.trustScore}%</div>
-                          </td>
-                          <td className="p-5 text-slate-600 font-bold whitespace-nowrap text-[14px]">
-                            {new Date(req.startDate).toLocaleDateString()} <span className="text-slate-400 mx-1">→</span> {new Date(req.endDate).toLocaleDateString()}
-                          </td>
-                          <td className="p-5 text-right">
-                            {(() => {
-                              const start = new Date(req.startDate);
-                              const end = new Date(req.endDate);
-                              const days = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 3600 * 24)) || 1;
-                              const estimate = days * req.item.pricePerDay;
-                              return (
-                                <div className="flex flex-col">
-                                  <span className="font-extrabold text-slate-950 text-[15px]">₹{estimate.toLocaleString()}</span>
-                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Est. Total</span>
-                                </div>
-                              );
-                            })()}
-                          </td>
-                          <td className="p-5 min-w-[220px]">
-                            <RequestActionButtons 
-                              requestId={req.id} 
-                              status={req.status} 
-                              isOwner={false} 
+                          )}
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <Link
+                            href={`/items/${req.item.id}`}
+                            className="font-bold text-[#1a1a1a] text-base hover:text-[#526600] transition-colors line-clamp-1 block"
+                          >
+                            {req.item.title}
+                          </Link>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-sm text-gray-500 font-medium">
+                              from {req.item.owner?.name || 'Owner'}
+                            </span>
+                            <ShieldCheck className="w-3.5 h-3.5 text-[#d4f07a]" />
+                          </div>
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <span className="text-xs text-gray-400 font-medium">
+                              {new Date(req.startDate).toLocaleDateString()} →{' '}
+                              {new Date(req.endDate).toLocaleDateString()}
+                            </span>
+                            {req.status === 'active' && left >= 0 && (
+                              <span className="text-[10px] font-black text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                                {left}d remaining
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Cost */}
+                        <div className="text-right flex-shrink-0">
+                          <p className="font-black text-[#1a1a1a] text-lg">₹{cost.toLocaleString()}</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Est. Total</p>
+                        </div>
+
+                        {/* Actions — status-specific, no duplicates */}
+                        <div className="flex-shrink-0 flex flex-col items-end gap-2">
+                          {req.status === 'pending' && (
+                            <>
+                              <span className={`text-[10px] font-black px-3 py-1 rounded-full ${badge.cls}`}>
+                                {badge.label}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                {req.item.id && req.startDate && req.endDate && req.item.title && (
+                                  <EditRequestModal
+                                    requestId={req.id}
+                                    itemId={req.item.id}
+                                    initialStartDate={new Date(req.startDate)}
+                                    initialEndDate={new Date(req.endDate)}
+                                    itemTitle={req.item.title}
+                                  />
+                                )}
+                                <DeleteRequestButton requestId={req.id} />
+                              </div>
+                            </>
+                          )}
+
+                          {(req.status === 'accepted' || req.status === 'active') && (
+                            <RequestActionButtons
+                              requestId={req.id}
+                              status={req.status}
+                              isOwner={false}
                               paymentStatus={req.paymentStatus}
                               itemId={req.item.id}
                               startDate={new Date(req.startDate)}
                               endDate={new Date(req.endDate)}
                               itemTitle={req.item.title}
                             />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center p-12 py-32 text-center bg-white rounded-3xl border border-slate-200 shadow-sm mt-4 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-slate-950/10" />
-                <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-8">
-                  <Search className="w-12 h-12 text-slate-300" />
-                </div>
-                <h3 className="text-3xl font-black text-slate-950 mb-3 tracking-tighter">
-                  Find gear for your next project
-                </h3>
-                <p className="text-[17px] text-slate-500 max-w-sm mx-auto mb-10 font-bold leading-relaxed">
-                  Explore items and make your first rental. Find exactly what you need for your next adventure.
-                </p>
-                <Link href="/explore">
-                  <Button className="rounded-full h-15 px-10 text-lg font-black shadow-md bg-slate-950 text-white hover:bg-black transition-all active:scale-95 duration-200">
-                    Start Exploring Gear
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </section>
-        )}
+                          )}
 
+                          {(req.status === 'completed' || req.status === 'rejected') && (
+                            <>
+                              <span className={`text-[10px] font-black px-3 py-1 rounded-full ${badge.cls}`}>
+                                {badge.label}
+                              </span>
+                              <Link href={`/items/${req.item.id}`}>
+                                <button className="border border-[#d4f07a] text-[#526600] bg-transparent rounded-full h-9 px-4 font-bold text-sm hover:bg-[#d4f07a]/10 active:scale-95 transition-all flex items-center gap-1.5">
+                                  <Star className="w-3.5 h-3.5" />
+                                  Rent Again
+                                </button>
+                              </Link>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+
+            {/* ── Recommended For You ────────────────────────── */}
+            {recommended.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-extrabold text-[#1a1a1a] tracking-tight">
+                    Recommended For You
+                  </h2>
+                  <Link
+                    href="/explore"
+                    className="text-sm font-bold text-[#526600] hover:text-[#3d4d00] transition-colors flex items-center gap-1"
+                  >
+                    Browse all gear →
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                  {recommended.map((item: any) => (
+                    <Link key={item.id} href={`/items/${item.id}`}>
+                      <div className="product-card-hover rounded-3xl overflow-hidden group cursor-pointer">
+                        {/* Image */}
+                        <div className="w-full aspect-video bg-gray-100 relative overflow-hidden">
+                          {item.imageUrl ? (
+                            <img
+                              src={item.imageUrl}
+                              alt={item.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Camera className="w-10 h-10 text-gray-300" />
+                            </div>
+                          )}
+                          {item.category && (
+                            <span className="absolute top-3 left-3 bg-[#1a1a1a]/70 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full">
+                              {item.category}
+                            </span>
+                          )}
+                        </div>
+                        {/* Info */}
+                        <div className="p-5">
+                          <h3 className="font-bold text-[#1a1a1a] text-base line-clamp-1 tracking-tight">
+                            {item.title}
+                          </h3>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-xs text-gray-500 font-medium">
+                              by {item.owner?.name || 'Owner'}
+                            </span>
+                            <ShieldCheck className="w-3 h-3 text-[#d4f07a]" />
+                          </div>
+                          <div className="flex items-baseline gap-1 mt-3">
+                            <span className="font-black text-lg text-[#1a1a1a] tracking-tighter">
+                              ₹{item.pricePerDay.toLocaleString()}
+                            </span>
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">/ day</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
+        )}
       </div>
+
+      {/* ── Footer ────────────────────────────────────────────── */}
+      <footer className="bg-[#1a1a1a] mt-32 py-16 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-12 border-b border-white/10 pb-12">
+            <div className="max-w-xs">
+              <div className="text-[#d4f07a] font-extrabold text-2xl tracking-tighter mb-4">RentO</div>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                The premium peer-to-peer equipment rental marketplace.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-10">
+              {[
+                { title: 'Platform', links: ['How it Works', 'Safety', 'RentO Plus'] },
+                { title: 'Community', links: ['Reviews', 'Forum', 'Events'] },
+                { title: 'Legal', links: ['Terms of Service', 'Privacy Policy', 'Cookie Policy'] },
+              ].map((col) => (
+                <div key={col.title} className="flex flex-col gap-3">
+                  <h5 className="text-[11px] font-bold uppercase tracking-widest text-[#d4f07a]">
+                    {col.title}
+                  </h5>
+                  <ul className="flex flex-col gap-2">
+                    {col.links.map((link) => (
+                      <li key={link}>
+                        <a href="#" className="text-sm text-gray-400 hover:text-white transition-colors">
+                          {link}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="mt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 gap-4">
+            <p>© 2025 RentO Marketplace. All rights reserved.</p>
+            <div className="flex gap-6">
+              <a href="#" className="hover:text-[#d4f07a] transition-colors">Twitter</a>
+              <a href="#" className="hover:text-[#d4f07a] transition-colors">Instagram</a>
+              <a href="#" className="hover:text-[#d4f07a] transition-colors">LinkedIn</a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

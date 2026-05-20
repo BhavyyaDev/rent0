@@ -204,7 +204,7 @@ export function BookingWidget({
 
   if (successMsg) {
     return (
-      <div className="flex flex-col items-center text-center w-full mt-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-8 py-12 animate-in fade-in zoom-in duration-500">
+      <div className="glass-panel lime-glow flex flex-col items-center text-center w-full rounded-[32px] p-8 py-12 animate-in fade-in zoom-in duration-500">
         <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-emerald-100">
           <CheckCircle2 className="w-10 h-10 text-emerald-500" />
         </div>
@@ -230,7 +230,7 @@ export function BookingWidget({
   }
 
   return (
-    <div className="flex flex-col w-full mt-2 bg-white rounded-2xl pb-2 shadow-sm border border-slate-200 p-6">
+    <div className="glass-panel lime-glow flex flex-col w-full rounded-[32px] p-8 pb-4">
        
       <div className="mb-8 flex justify-between items-baseline">
          <span className="text-3xl font-black text-slate-950 tracking-tighter">₹{pricePerDay.toLocaleString()} <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">/ day</span></span>

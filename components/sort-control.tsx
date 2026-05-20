@@ -14,29 +14,26 @@ export function SortControl() {
     router.push(`/explore?${params.toString()}`, { scroll: false });
   };
 
+  const active =
+    'flex items-center space-x-2 bg-[#1a1a1a] text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg shadow-[#1a1a1a]/10';
+  const inactive =
+    'flex items-center space-x-2 bg-white border border-gray-200 text-gray-600 px-6 py-3 rounded-full text-sm font-bold hover:bg-gray-50 transition-colors';
+
   return (
-    <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-full w-fit mb-8">
+    <div className="flex flex-wrap gap-3">
       <button
         onClick={() => setSort('newest')}
-        className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold transition-all ${
-          currentSort === 'newest'
-            ? 'bg-white text-slate-900 shadow-sm'
-            : 'text-slate-500 hover:text-slate-700'
-        }`}
+        className={currentSort === 'newest' ? active : inactive}
       >
-        <Clock className="w-4 h-4" />
-        Newest First
+        <Clock className="h-4 w-4" />
+        <span>Newest First</span>
       </button>
       <button
         onClick={() => setSort('price-low')}
-        className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold transition-all ${
-          currentSort === 'price-low'
-            ? 'bg-white text-slate-900 shadow-sm'
-            : 'text-slate-500 hover:text-slate-700'
-        }`}
+        className={currentSort === 'price-low' ? active : inactive}
       >
-        <Banknote className="w-4 h-4" />
-        Price: Low to High
+        <Banknote className="h-4 w-4" />
+        <span>Price: Low to High</span>
       </button>
     </div>
   );

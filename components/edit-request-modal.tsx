@@ -129,8 +129,12 @@ export function EditRequestModal({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="text-slate-400 hover:text-blue-500 transition-colors p-1" title="Edit Request">
-          <Edit2 className="w-5 h-5" />
+        <button
+          className="border border-gray-200 text-gray-500 hover:border-[#d4f07a] hover:text-[#526600] bg-transparent rounded-full h-9 px-4 font-bold text-sm transition-all flex items-center gap-1.5 active:scale-95"
+          title="Edit Request"
+        >
+          <Edit2 className="w-3.5 h-3.5" />
+          Edit
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] rounded-[32px] border-none shadow-2xl p-0 overflow-hidden bg-white">
@@ -240,10 +244,10 @@ export function EditRequestModal({
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleUpdate}
               disabled={isPending || !datesSelected || isAvailable === false || isCheckingDates}
-              className="rounded-xl px-8 font-extrabold bg-slate-900 text-white hover:bg-slate-800 shadow-lg shadow-slate-200 active:scale-95 transition-all h-12 flex-1"
+              className="rounded-full px-8 font-extrabold bg-[#d4f07a] text-[#1a1a1a] hover:bg-[#c8e86e] hover:scale-105 shadow-md active:scale-95 transition-all h-12 flex-1"
             >
               {isPending ? (
                 <span className="flex items-center gap-2">
