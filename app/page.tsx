@@ -105,17 +105,17 @@ export default async function Home() {
     <>
       {/* ── Fixed background orbs ─────────────────────────────── */}
       <div className="fixed inset-0 pointer-events-none z-[-2] overflow-hidden">
-        <div className="orb w-[500px] h-[500px] bg-[#d4f07a] top-[-100px] left-[-100px]" />
+        <div className="orb absolute w-[500px] h-[500px] bg-[#d4f07a] top-[-100px] left-[-100px]" />
         <div
-          className="orb w-[600px] h-[600px] bg-blue-200 bottom-[-200px] right-[-100px]"
+          className="orb absolute w-[600px] h-[600px] bg-blue-200 bottom-[-200px] right-[-100px]"
           style={{ animationDelay: '-5s' }}
         />
         <div
-          className="orb w-[400px] h-[400px] bg-[#d4f07a]/30 top-1/2 left-1/3"
+          className="orb absolute w-[400px] h-[400px] bg-[#d4f07a]/30 top-1/2 left-1/3"
           style={{ animationDelay: '-10s' }}
         />
         <div
-          className="orb w-[500px] h-[500px] bg-[#d4f07a]/20 bottom-1/4 left-0"
+          className="orb absolute w-[500px] h-[500px] bg-[#d4f07a]/20 bottom-1/4 left-0"
           style={{ animationDelay: '-15s' }}
         />
       </div>
@@ -250,8 +250,8 @@ export default async function Home() {
       {/* ── CTA ───────────────────────────────────────────────── */}
       <section className="w-full bg-[#1a1a1a] py-32 text-center px-6 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none z-0">
-          <div className="orb w-[300px] h-[300px] bg-[#d4f07a]/10 top-[-100px] left-1/4 opacity-20" />
-          <div className="orb w-[400px] h-[400px] bg-[#d4f07a]/10 bottom-[-150px] right-1/4 opacity-10" />
+          <div className="orb absolute w-[300px] h-[300px] bg-[#d4f07a]/10 top-[-100px] left-1/4 opacity-20" />
+          <div className="orb absolute w-[400px] h-[400px] bg-[#d4f07a]/10 bottom-[-150px] right-1/4 opacity-10" />
         </div>
         <div className="relative z-10 max-w-4xl mx-auto">
           <h2 className="text-5xl md:text-6xl text-white font-bold mb-8">

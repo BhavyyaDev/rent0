@@ -45,7 +45,7 @@ export default function AddItemPage() {
     return (
       <div className="min-h-screen bg-[#f9f9f9] flex items-center justify-center p-6 relative overflow-hidden">
         <div
-          className="orb w-[500px] h-[500px] bg-[#d4f07a]"
+          className="orb absolute w-[500px] h-[500px] bg-[#d4f07a]"
           style={{ top: '-120px', right: '-100px', opacity: 0.15, filter: 'blur(120px)' }}
         />
         <div className="glass-panel rounded-3xl p-12 max-w-md w-full text-center relative z-10">
@@ -78,11 +78,11 @@ export default function AddItemPage() {
 
       {/* ── Background orbs ───────────────────────────────────── */}
       <div
-        className="orb w-[500px] h-[500px] bg-[#d4f07a]"
+        className="orb absolute w-[500px] h-[500px] bg-[#d4f07a]"
         style={{ top: '-100px', right: '-100px', opacity: 0.15, filter: 'blur(120px)' }}
       />
       <div
-        className="orb w-[400px] h-[400px] bg-pink-200"
+        className="orb absolute w-[400px] h-[400px] bg-pink-200"
         style={{ bottom: '20%', left: '-100px', opacity: 0.15, filter: 'blur(120px)' }}
       />
 

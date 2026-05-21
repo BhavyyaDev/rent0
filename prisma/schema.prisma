@@ -12,7 +12,7 @@ model User {
   name       String?
   trustScore Int       @default(100)
   createdAt  DateTime  @default(now())
-  role       String    @default("onboarding")
+  role       String    @default("renter")
   items      Item[]
   requests   Request[]
 }

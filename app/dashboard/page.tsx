@@ -123,11 +123,11 @@ export default async function DashboardPage({
 
       {/* ── Background orbs ───────────────────────────────────── */}
       <div
-        className="orb w-[500px] h-[500px] bg-[#d4f07a]"
+        className="orb absolute w-[500px] h-[500px] bg-[#d4f07a]"
         style={{ top: '-120px', right: '-100px', opacity: 0.12, filter: 'blur(120px)' }}
       />
       <div
-        className="orb w-[400px] h-[400px] bg-blue-200"
+        className="orb absolute w-[400px] h-[400px] bg-blue-200"
         style={{ bottom: '10%', left: '-80px', opacity: 0.12, filter: 'blur(120px)' }}
       />
 

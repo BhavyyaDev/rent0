@@ -31,39 +31,22 @@ export default async function RootLayout({
 }>) {
   let globalRole = 'guest';
   const user = await currentUser();
-  const headerList = await headers();
-  const rawUrl = headerList.get('x-url') || '';
-  const pathname = rawUrl ? new URL(rawUrl).pathname : '';
-
-  // Auth pages are standalone — no navbar, no layout chrome
-  const isAuthPage = pathname
-    ? (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up'))
-    : false;
 
   if (user) {
-    globalRole = 'onboarding';
-    // Sync the user to ensure they exist in DB
     const dbUser = (await syncUser()) as any;
     if (dbUser?.role) {
       globalRole = dbUser.role;
-    }
-
-    // Ensure we have a reliable pathname before attempting mandatory onboarding redirects
-    const isOnboardingPage = pathname.toLowerCase().includes('/onboarding');
-
-    if (globalRole === 'onboarding' && pathname && !isOnboardingPage) {
-      redirect('/onboarding');
+    } else {
+      globalRole = 'renter'; // fallback
     }
   }
-
-  const showNavbar = !isAuthPage && globalRole !== 'onboarding';
 
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#F8FAFC] min-h-screen`}>
         <ClerkProvider>
-          {showNavbar && <Navbar role={globalRole} />}
-          <main className={showNavbar ? 'min-h-[calc(100vh-4rem)]' : 'min-h-screen'}>
+          <Navbar role={globalRole} />
+          <main className="min-h-[calc(100vh-4rem)]">
             {children}
           </main>
         </ClerkProvider>

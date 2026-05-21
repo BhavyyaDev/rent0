@@ -95,7 +95,7 @@ function CheckoutPageContent() {
   if (error) {
     return (
       <div className="min-h-screen bg-[#f9f9f9] relative overflow-x-hidden flex items-center justify-center p-8">
-        <div className="orb w-[500px] h-[500px] bg-[#d4f07a] top-[-100px] right-[-100px]" />
+        <div className="orb absolute w-[500px] h-[500px] bg-[#d4f07a] top-[-100px] right-[-100px]" />
         <div className="glass-panel rounded-3xl p-10 max-w-md w-full text-center">
           <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-8 h-8 text-red-400" />
@@ -118,8 +118,8 @@ function CheckoutPageContent() {
   return (
     <div className="min-h-screen bg-[#f9f9f9] relative overflow-x-hidden">
       {/* Background orbs */}
-      <div className="orb w-[500px] h-[500px] bg-[#d4f07a] top-[-100px] right-[-100px]" />
-      <div className="orb w-[350px] h-[350px] bg-pink-200 bottom-[20%] left-[-80px]" />
+      <div className="orb absolute w-[500px] h-[500px] bg-[#d4f07a] top-[-100px] right-[-100px]" />
+      <div className="orb absolute w-[350px] h-[350px] bg-pink-200 bottom-[20%] left-[-80px]" />
 
       {/* Nav */}
       <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-white/30 shadow-sm">

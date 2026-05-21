@@ -11,7 +11,7 @@ const isAuthRoute = createRouteMatcher([
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
   "/account(.*)",
-  "/onboarding(.*)",
+
   "/items/add(.*)",
   "/checkout(.*)",
 ]);
@@ -31,18 +31,9 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(signInUrl);
   }
 
-  // Enforce role selection as the very first thing for new visitors
-  if (req.nextUrl.pathname === '/') {
-    const hasRoleCookie = req.cookies.has('rento_role');
-    if (!hasRoleCookie) {
-      return NextResponse.redirect(new URL('/role-selection', req.url));
-    }
-  }
 
-  // Inject current URL so server layout can detect pathname without headers()
-  const response = NextResponse.next();
-  response.headers.set('x-url', req.url);
-  return response;
+
+  return NextResponse.next();
 });
 
 export const config = {

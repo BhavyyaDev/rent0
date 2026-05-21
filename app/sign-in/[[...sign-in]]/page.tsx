@@ -51,26 +51,7 @@ export default function SignInPage() {
   return (
     <div className="min-h-screen bg-[#f0f2f5] relative overflow-hidden flex flex-col">
 
-      {/* Navbar */}
-      <header className="w-full px-10 py-6 flex items-center justify-between z-10">
-        <Link href="/" className="text-2xl font-extrabold tracking-tight text-[#1a1a1a]">
-          RentO
-        </Link>
-        <nav className="flex items-center gap-6">
-          <Link
-            href="/items"
-            className="text-sm font-medium text-gray-600 hover:text-[#1a1a1a] transition-colors"
-          >
-            Explore
-          </Link>
-          <Link
-            href="/sign-in"
-            className="px-6 py-2.5 border-2 border-[#d4f07a] text-[#1a1a1a] rounded-full text-sm font-bold hover:bg-[#d4f07a]/20 transition-colors"
-          >
-            Sign In
-          </Link>
-        </nav>
-      </header>
+
 
       {/* Main */}
       <main className="flex-1 flex items-center justify-center px-6 pb-16 relative z-10">

@@ -57,11 +57,11 @@ export default async function ItemDetailPage({
 
       {/* ── Background orbs ───────────────────────────────────── */}
       <div
-        className="orb w-[500px] h-[500px] bg-[#d4f07a]"
+        className="orb absolute w-[500px] h-[500px] bg-[#d4f07a]"
         style={{ top: '-100px', right: '-100px', opacity: 0.15, filter: 'blur(120px)' }}
       />
       <div
-        className="orb w-[400px] h-[400px] bg-pink-200"
+        className="orb absolute w-[400px] h-[400px] bg-pink-200"
         style={{ bottom: '20%', left: '-100px', opacity: 0.15, filter: 'blur(120px)' }}
       />
 

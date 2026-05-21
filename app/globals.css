@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
+
 
 @custom-variant dark (&:is(.dark *));
 
@@ -158,8 +158,7 @@
 
 /* ── Background orb blobs ─────────────────────────────────────── */
 .orb {
-  position: absolute;
-  border-radius: 50%;
+  @apply absolute rounded-full;
   filter: blur(80px);
   z-index: -1;
   opacity: 0.4;
