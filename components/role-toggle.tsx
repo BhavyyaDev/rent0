@@ -17,14 +17,14 @@ export function RoleToggle({ currentRole }: { currentRole: string }) {
   };
 
   return (
-    <div className="flex p-1.5 bg-slate-100 rounded-2xl w-fit shadow-inner border border-slate-200/50">
+    <div className="flex p-1 glass-panel rounded-2xl w-fit">
       <button
         onClick={() => handleToggle('renter')}
         disabled={isPending}
         className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all duration-200 ease-in-out active:scale-95 ${
           currentRole === 'renter'
-            ? 'bg-slate-950 text-white shadow-xl'
-            : 'text-slate-500 hover:text-slate-700'
+            ? 'bg-[#1a1a1a] text-white shadow-md'
+            : 'text-gray-500 hover:text-[#1a1a1a]'
         }`}
       >
         {isPending && currentRole !== 'renter' ? (
@@ -39,8 +39,8 @@ export function RoleToggle({ currentRole }: { currentRole: string }) {
         disabled={isPending}
         className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all duration-200 ease-in-out active:scale-95 ${
           currentRole === 'lender'
-            ? 'bg-slate-950 text-white shadow-xl'
-            : 'text-slate-500 hover:text-slate-700'
+            ? 'bg-[#1a1a1a] text-white shadow-md'
+            : 'text-gray-500 hover:text-[#1a1a1a]'
         }`}
       >
         {isPending && currentRole !== 'lender' ? (

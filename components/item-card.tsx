@@ -46,7 +46,7 @@ export function ItemCard({ item, dateFilterActive }: { item: Item, dateFilterAct
   return (
     <Link href={`/items/${item.id}`} className="group block focus:outline-none cursor-pointer active:scale-95 transition-all duration-200 ease-in-out">
       <div className={cn(
-        "flex flex-col gap-1 transition-all duration-200 ease-in-out bg-white p-3 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5",
+        "product-card-hover flex flex-col gap-1 rounded-3xl p-4",
         isDimmed && "opacity-40 grayscale-[0.8]"
       )}>
         {/* Image Section */}

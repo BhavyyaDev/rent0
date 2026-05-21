@@ -1,18 +1,65 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Camera, ShoppingBag, ArrowRight, Loader2, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { completeOnboarding } from '@/app/actions/user';
-import { cn } from '@/lib/utils';
+import { useUser } from '@clerk/nextjs';
+import Link from 'next/link';
+import { ShoppingBag, Camera, Check, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
+import { completeOnboarding, getAccountData } from '@/app/actions/user';
+
+const RENTER_BENEFITS = [
+  'Browse thousands of items',
+  'Secure escrow payments',
+  'Lifecycle protection',
+];
+
+const LENDER_BENEFITS = [
+  'Earn passive income',
+  'You control pricing',
+  'Protected transactions',
+];
+
+// Glass styles shared between card states
+const GLASS_BASE: React.CSSProperties = {
+  backdropFilter: 'blur(12px)',
+  WebkitBackdropFilter: 'blur(12px)',
+};
+
+const CARD_DEFAULT: React.CSSProperties = {
+  ...GLASS_BASE,
+  background: 'rgba(255, 255, 255, 0.60)',
+  border: '2px solid rgba(255, 255, 255, 0.5)',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.06)',
+};
+
+const CARD_SELECTED: React.CSSProperties = {
+  ...GLASS_BASE,
+  background: 'rgba(212, 240, 122, 0.15)',
+  border: '2px solid #d4f07a',
+  boxShadow: '0 10px 40px -10px rgba(212, 240, 122, 0.55)',
+};
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { isSignedIn, isLoaded } = useUser();
   const [selected, setSelected] = useState<'renter' | 'lender' | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState('');
+
+  // Auth guard — middleware already blocks unauthenticated, belt-and-suspenders
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) router.push('/sign-in');
+  }, [isLoaded, isSignedIn, router]);
+
+  // Skip onboarding if user already has a role set
+  useEffect(() => {
+    getAccountData().then((data) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (data && (data as any).role && (data as any).role !== 'onboarding') {
+        router.push('/dashboard');
+      }
+    });
+  }, [router]);
 
   const handleComplete = async () => {
     if (!selected) return;
@@ -29,106 +76,191 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 sm:p-10">
-      <div className="max-w-4xl w-full">
-        <div className="text-center mb-16 animate-in fade-in slide-in-from-top-4 duration-700">
-          <div className="inline-block px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-sm font-bold mb-6">
-            Welcome to RentO
+    <div className="min-h-screen bg-[#f9f9f9] relative overflow-x-hidden flex flex-col items-center justify-center px-6 py-16">
+      {/* Background orbs */}
+      <div className="orb w-[600px] h-[600px] bg-[#d4f07a] top-[-200px] right-[-200px]" />
+      <div className="orb w-[450px] h-[450px] bg-[#d4f07a]/50 bottom-[-120px] left-[-120px]" />
+      <div className="orb w-[280px] h-[280px] bg-pink-200/60 top-[45%] left-[55%]" />
+
+      <div className="w-full max-w-5xl mx-auto flex flex-col items-center">
+
+        {/* Logo */}
+        <Link
+          href="/"
+          className="text-3xl font-black tracking-tighter text-[#d4f07a] mb-14 hover:opacity-80 transition-opacity"
+        >
+          RentO
+        </Link>
+
+        {/* Header */}
+        <header className="text-center mb-14">
+          <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-[#d4f07a]/15 border border-[#d4f07a]/30 mb-6">
+            <span className="text-[#526600] font-bold text-sm tracking-wide">Welcome to RentO</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-6 tracking-tight">
-             How do you want to use RentO?
+          <h1 className="text-4xl md:text-5xl font-black text-[#1a1a1a] mb-4 tracking-tight">
+            How will you use RentO?
           </h1>
-          <p className="text-lg text-slate-500 font-medium max-w-xl mx-auto leading-relaxed">
-            Pick a role to get started. You can always switch between them later from your profile.
+          <p className="text-gray-400 text-base md:text-lg max-w-md mx-auto leading-relaxed">
+            You can switch anytime from your dashboard settings.
           </p>
-        </div>
+        </header>
 
-        <div className="grid sm:grid-cols-2 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-6 duration-1000">
-          {/* Renter Card */}
-          <Card 
+        {/* Role cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mb-8">
+
+          {/* ── Renter Card ─────────────────────────────────── */}
+          <div
+            role="button"
+            tabIndex={0}
+            aria-pressed={selected === 'renter'}
             onClick={() => setSelected('renter')}
-            className={cn(
-              "group relative overflow-hidden cursor-pointer border-2 transition-all duration-300 p-8 sm:p-10 flex flex-col items-center text-center gap-6 rounded-[40px] hover:shadow-2xl active:scale-[0.98]",
-              selected === 'renter' 
-                ? "border-emerald-500 bg-emerald-50/10 shadow-xl" 
-                : "border-slate-100 bg-white hover:border-slate-200"
-            )}
+            onKeyDown={(e) => e.key === 'Enter' && setSelected('renter')}
+            style={selected === 'renter' ? CARD_SELECTED : CARD_DEFAULT}
+            className="relative cursor-pointer rounded-3xl p-8 transition-all duration-300 flex flex-col items-center text-center group hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-[#d4f07a]/50"
           >
-            <div className={cn(
-              "w-20 h-20 rounded-3xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
-              selected === 'renter' ? "bg-emerald-500 text-white" : "bg-slate-50 text-slate-600 px-1"
-            )}>
-              <ShoppingBag className="w-10 h-10" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-extrabold text-slate-900 mb-2">I want to Rent</h3>
-              <p className="text-slate-500 font-medium leading-relaxed">
-                Find professional gear, book instantly, and create amazing projects.
-              </p>
-            </div>
+            {/* Checkmark badge */}
             {selected === 'renter' && (
-              <div className="absolute top-6 right-6 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white animate-in zoom-in duration-300">
-                <Check className="w-5 h-5" />
+              <div className="absolute top-5 right-5 w-8 h-8 bg-[#d4f07a] rounded-full flex items-center justify-center animate-in zoom-in duration-200">
+                <Check className="w-4 h-4 text-[#1a1a1a]" strokeWidth={3} />
               </div>
             )}
-          </Card>
 
-          {/* Lender Card */}
-          <Card 
+            {/* Icon */}
+            <div
+              className={[
+                'w-20 h-20 rounded-2xl flex items-center justify-center mb-6 transition-all duration-500',
+                selected === 'renter'
+                  ? 'bg-[#d4f07a] text-[#1a1a1a] scale-110'
+                  : 'bg-[#d4f07a]/20 text-[#526600] group-hover:bg-[#d4f07a]/35 group-hover:scale-110',
+              ].join(' ')}
+            >
+              <ShoppingBag className="w-10 h-10" strokeWidth={1.5} />
+            </div>
+
+            <h3 className="text-2xl font-black text-[#1a1a1a] mb-2">I want to Rent</h3>
+            <p className="text-gray-500 text-sm leading-relaxed mb-6">
+              Browse and rent gear from trusted locals in your community.
+            </p>
+
+            {/* Benefits list */}
+            <ul className="w-full space-y-2 mb-7 text-left">
+              {RENTER_BENEFITS.map((b) => (
+                <li key={b} className="flex items-center gap-2.5 text-sm text-[#1a1c1c]">
+                  <CheckCircle2 className="w-4 h-4 text-[#526600] flex-shrink-0" />
+                  {b}
+                </li>
+              ))}
+            </ul>
+
+            {/* Card CTA */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setSelected('renter'); }}
+              className={[
+                'w-full py-3 rounded-full font-bold text-sm transition-all duration-200 active:scale-95',
+                selected === 'renter'
+                  ? 'bg-[#d4f07a] text-[#1a1a1a] shadow-md shadow-[#d4f07a]/30 hover:bg-[#c8e86e]'
+                  : 'bg-[#d4f07a]/20 text-[#526600] hover:bg-[#d4f07a]/40',
+              ].join(' ')}
+            >
+              Start Renting
+            </button>
+          </div>
+
+          {/* ── Lender Card ─────────────────────────────────── */}
+          <div
+            role="button"
+            tabIndex={0}
+            aria-pressed={selected === 'lender'}
             onClick={() => setSelected('lender')}
-            className={cn(
-              "group relative overflow-hidden cursor-pointer border-2 transition-all duration-300 p-8 sm:p-10 flex flex-col items-center text-center gap-6 rounded-[40px] hover:shadow-2xl active:scale-[0.98]",
-              selected === 'lender' 
-                ? "border-emerald-500 bg-emerald-50/10 shadow-xl" 
-                : "border-slate-100 bg-white hover:border-slate-200"
-            )}
+            onKeyDown={(e) => e.key === 'Enter' && setSelected('lender')}
+            style={selected === 'lender' ? CARD_SELECTED : CARD_DEFAULT}
+            className="relative cursor-pointer rounded-3xl p-8 transition-all duration-300 flex flex-col items-center text-center group hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-[#d4f07a]/50"
           >
-            <div className={cn(
-              "w-20 h-20 rounded-3xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3",
-              selected === 'lender' ? "bg-emerald-500 text-white" : "bg-slate-50 text-slate-600"
-            )}>
-              <Camera className="w-10 h-10" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-extrabold text-slate-900 mb-2">I want to List</h3>
-              <p className="text-slate-500 font-medium leading-relaxed">
-                Turn your equipment into income. List your gear and start earning today.
-              </p>
-            </div>
+            {/* Checkmark badge */}
             {selected === 'lender' && (
-              <div className="absolute top-6 right-6 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white animate-in zoom-in duration-300">
-                <Check className="w-5 h-5" />
+              <div className="absolute top-5 right-5 w-8 h-8 bg-[#d4f07a] rounded-full flex items-center justify-center animate-in zoom-in duration-200">
+                <Check className="w-4 h-4 text-[#1a1a1a]" strokeWidth={3} />
               </div>
             )}
-          </Card>
+
+            {/* Icon */}
+            <div
+              className={[
+                'w-20 h-20 rounded-2xl flex items-center justify-center mb-6 transition-all duration-500',
+                selected === 'lender'
+                  ? 'bg-[#1a1a1a] text-white scale-110'
+                  : 'bg-gray-100 text-gray-400 group-hover:bg-[#1a1a1a]/10 group-hover:text-[#1a1a1a] group-hover:scale-110',
+              ].join(' ')}
+            >
+              <Camera className="w-10 h-10" strokeWidth={1.5} />
+            </div>
+
+            <h3 className="text-2xl font-black text-[#1a1a1a] mb-2">I want to Lend</h3>
+            <p className="text-gray-500 text-sm leading-relaxed mb-6">
+              List your gear and start earning from equipment you already own.
+            </p>
+
+            {/* Benefits list */}
+            <ul className="w-full space-y-2 mb-7 text-left">
+              {LENDER_BENEFITS.map((b) => (
+                <li key={b} className="flex items-center gap-2.5 text-sm text-[#1a1c1c]">
+                  <CheckCircle2 className="w-4 h-4 text-[#526600] flex-shrink-0" />
+                  {b}
+                </li>
+              ))}
+            </ul>
+
+            {/* Card CTA */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setSelected('lender'); }}
+              className={[
+                'w-full py-3 rounded-full font-bold text-sm transition-all duration-200 active:scale-95',
+                selected === 'lender'
+                  ? 'bg-[#1a1a1a] text-white shadow-md hover:bg-[#2a2a2a]'
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200',
+              ].join(' ')}
+            >
+              Start Lending
+            </button>
+          </div>
         </div>
 
+        {/* Error message */}
         {error && (
-          <div className="text-red-500 text-center font-bold mb-6 animate-shake">
-            {error}
-          </div>
+          <p className="text-red-500 text-sm font-semibold mb-4 text-center">{error}</p>
         )}
 
-        <div className="flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-          <Button
-            size="lg"
-            disabled={!selected || isPending}
-            onClick={handleComplete}
-            className="rounded-full h-16 px-12 text-lg font-extrabold bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 disabled:opacity-50 disabled:translate-y-0 hover:-translate-y-1 group"
-          >
-            {isPending ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Setting up your account...
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                Get Started
-                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </span>
-            )}
-          </Button>
-        </div>
+        {/* Continue button */}
+        <button
+          onClick={handleComplete}
+          disabled={!selected || isPending}
+          className="w-full max-w-md bg-[#d4f07a] text-[#1a1a1a] font-black text-base py-5 rounded-full transition-all duration-200 hover:bg-[#c8e86e] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-[#d4f07a] flex items-center justify-center gap-2.5 shadow-lg shadow-[#d4f07a]/30"
+        >
+          {isPending ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Setting up your account...
+            </>
+          ) : (
+            <>
+              Continue
+              <ArrowRight className="w-5 h-5" />
+            </>
+          )}
+        </button>
+
+        {/* Terms note */}
+        <p className="text-xs text-gray-400 mt-5 text-center">
+          By continuing you agree to our{' '}
+          <a href="#" className="underline decoration-gray-300 hover:text-[#526600] hover:decoration-[#526600] transition-colors">
+            Terms of Service
+          </a>{' '}
+          and{' '}
+          <a href="#" className="underline decoration-gray-300 hover:text-[#526600] hover:decoration-[#526600] transition-colors">
+            Privacy Policy
+          </a>
+          .
+        </p>
       </div>
     </div>
   );

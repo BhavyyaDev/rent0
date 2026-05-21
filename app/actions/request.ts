@@ -440,8 +440,8 @@ export async function createCheckoutSession(requestId: string) {
         requestId,
         renterId: user.id,
       },
-      success_url: `${baseUrl}/dashboard?payment=success&requestId=${requestId}`,
-      cancel_url: `${baseUrl}/dashboard?payment=cancelled`,
+      success_url: `${baseUrl}/checkout?status=success&requestId=${requestId}`,
+      cancel_url: `${baseUrl}/checkout?requestId=${requestId}`,
     });
 
     console.log(`[Stripe] Checkout session created: ${session.id} for Request ${requestId}`);
@@ -517,6 +517,56 @@ export async function markAsActive(requestId: string) {
     return { success: true };
   } catch (err) {
     return { error: 'Failed to mark as active' };
+  }
+}
+
+/**
+ * Fetch all data needed to render the checkout page.
+ */
+export async function getCheckoutData(requestId: string) {
+  const user = await currentUser();
+  if (!user) return { error: 'Authentication required' };
+
+  try {
+    const request = await (prisma as any).request.findUnique({
+      where: { id: requestId },
+      include: { item: true },
+    });
+
+    if (!request) return { error: 'Request not found' };
+    if (request.renterId !== user.id) return { error: 'Unauthorized' };
+    if (request.status !== 'accepted') return { error: 'This booking is not ready for payment.' };
+    if (request.paymentStatus === 'paid') return { error: 'This booking has already been paid.' };
+
+    const start = new Date(request.startDate);
+    const end = new Date(request.endDate);
+    const days = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 3600 * 24)) || 1;
+    const totalPrice = days * request.item.pricePerDay;
+
+    const lender = await (prisma as any).user.findUnique({
+      where: { id: request.item.ownerId },
+      select: { name: true },
+    });
+
+    return {
+      success: true,
+      requestId: request.id,
+      item: {
+        title: request.item.title,
+        category: request.item.category,
+        imageUrl: request.item.imageUrl as string | null,
+        pricePerDay: request.item.pricePerDay as number,
+      },
+      deposit: request.deposit as number,
+      lender: { name: (lender?.name as string) || 'Lender' },
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+      days,
+      totalPrice,
+    };
+  } catch (err) {
+    console.error('[Request Action] Failed to get checkout data:', err);
+    return { error: 'Failed to load checkout details' };
   }
 }
 

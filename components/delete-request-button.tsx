@@ -24,20 +24,21 @@ export function DeleteRequestButton({ requestId }: DeleteRequestButtonProps) {
   };
 
   return (
-    <button 
+    <button
       onClick={handleDelete}
       disabled={isPending}
       className={cn(
-        "text-slate-400 hover:text-red-500 transition-colors p-1 disabled:opacity-50 disabled:cursor-not-allowed",
-        isPending && "text-red-500"
+        "border border-red-400 text-red-500 bg-transparent rounded-full h-9 px-4 font-bold text-sm hover:bg-red-50 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5",
+        isPending && "opacity-70"
       )}
       title="Cancel Request"
     >
       {isPending ? (
-        <Loader2 className="w-5 h-5 animate-spin" />
+        <Loader2 className="w-4 h-4 animate-spin" />
       ) : (
-        <XCircle className="w-5 h-5" />
+        <XCircle className="w-4 h-4" />
       )}
+      Cancel
     </button>
   );
 }

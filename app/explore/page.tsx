@@ -1,11 +1,11 @@
 import { ItemCard, Item } from '@/components/item-card';
-import { Package, Camera, Speaker, Gamepad2, Sparkles, Search as SearchIcon } from 'lucide-react';
+import { Camera, Speaker, Gamepad2, Sparkles, Search as SearchIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { SortControl } from '@/components/sort-control';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 export default async function ExplorePage(props: {
   searchParams: Promise<{ sort?: string }>;
@@ -19,121 +19,114 @@ export default async function ExplorePage(props: {
     orderBy = { pricePerDay: 'asc' };
   }
 
-  // Fetch items from the database with filtered order
+  // Fetch items
   let rawItems: any[] = [];
   try {
     rawItems = await prisma.item.findMany({
-      include: { 
+      include: {
         owner: true,
         requests: {
-          where: {
-            status: 'accepted',
-            endDate: { gte: new Date() }
-          }
-        }
+          where: { status: 'accepted', endDate: { gte: new Date() } },
+        },
       },
       orderBy,
     });
   } catch (error: any) {
-    console.error("Database error:", error);
-    try {
-      require('fs').writeFileSync('/tmp/rento-db-error.log', String(error) + '\n' + (error.stack || ''));
-    } catch(e) {}
+    console.error('Database error:', error);
     rawItems = [];
   }
 
   const items = rawItems as unknown as Item[];
 
   return (
-    <div className="w-full min-h-[calc(100vh-4rem)] bg-[#F8FAFC]">
-      {/* Header wrapper for background fill */}
-      <div className="bg-white border-b border-slate-200/60 py-20">
-        <div className="max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20">
-          <div className="flex flex-col gap-4 text-left">
-            <h1 className="text-[40px] md:text-[56px] font-black text-slate-950 tracking-tighter leading-none">
-              Explore Gear
-            </h1>
-            <p className="text-xl text-slate-500 font-bold max-w-2xl leading-relaxed">
-              Browse our complete local equipment inventory and find everything you need to create.
-            </p>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#f9fafb]">
 
-      <div className="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 py-20">
-        {/* Sorting Controls */}
-        <div className="mb-12">
-          <SortControl />
-        </div>
+      {/* ── Hero ────────────────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-6 pt-16 pb-12">
+        <h1 className="text-6xl md:text-7xl font-extrabold text-[#1a1a1a] mb-6 tracking-[-0.04em]">
+          Explore Gear
+        </h1>
+        <p className="text-lg md:text-xl text-gray-500 max-w-2xl leading-relaxed font-medium">
+          Browse our complete local equipment inventory and find everything you need to create.
+        </p>
+      </section>
 
+      {/* ── Sort Controls ───────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-6 mb-12">
+        <SortControl />
+      </section>
+
+      {/* ── Product Grid ────────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-6 pb-20">
         {items.length === 0 ? (
           <div className="flex flex-col gap-16 mt-8">
-            <div className="flex flex-col items-center justify-center py-32 bg-white rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-slate-950/10" />
-              <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-8">
-                <SearchIcon className="w-12 h-12 text-slate-300" />
+            {/* Empty state */}
+            <div className="flex flex-col items-center justify-center py-32 bg-white/70 backdrop-blur-md rounded-3xl border border-white/30 shadow-sm relative overflow-hidden">
+              <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-8">
+                <SearchIcon className="w-12 h-12 text-gray-300" />
               </div>
-              <h3 className="text-[28px] font-black text-slate-950 mb-3 tracking-tight">No gear listed yet</h3>
-              <p className="text-[17px] text-slate-500 max-w-sm mx-auto mb-12 font-bold leading-relaxed text-center">
-                We're just getting started! Check back soon for new gear additions or jump start the marketplace by listing your own items.
+              <h3 className="text-[28px] font-black text-[#1a1a1a] mb-3 tracking-tight">
+                No gear listed yet
+              </h3>
+              <p className="text-[17px] text-gray-500 max-w-sm mx-auto mb-12 font-medium leading-relaxed text-center">
+                We're just getting started! Check back soon or jump start the marketplace by listing your own items.
               </p>
               <Link href="/items/add">
-                <Button className="rounded-full h-15 px-10 text-lg font-black shadow-md transition-all active:scale-[0.97] bg-slate-950 text-white hover:bg-black">
+                <Button className="rounded-full h-14 px-10 text-base font-bold bg-[#1a1a1a] text-white hover:bg-black">
                   List your item
                 </Button>
               </Link>
             </div>
-            
+
+            {/* Popular categories fallback */}
             <div className="flex flex-col gap-5">
-              <h3 className="text-[22px] font-bold text-slate-900 px-2">Popular Categories</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
-                  <Link href="/search?category=camera" className="group rounded-2xl bg-white border border-slate-200 p-6 flex flex-col gap-4 shadow-sm hover:shadow-md hover:border-slate-300 transition-all active:scale-95 hover:-translate-y-0.5 duration-200">
-                    <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mx-auto sm:mx-0 group-hover:scale-110 transition-transform">
-                       <Camera className="w-6 h-6 text-slate-700" />
-                    </div>
-                    <div className="text-center sm:text-left">
-                      <h4 className="font-bold text-[#222222] text-lg">Cameras</h4>
-                      <p className="text-slate-500 text-sm font-medium mt-1">Lenses & rigs</p>
-                    </div>
-                  </Link>
-                  <Link href="/search?category=audio" className="group rounded-[24px] bg-white border border-slate-100 p-6 flex flex-col gap-4 shadow-sm hover:shadow-xl hover:border-slate-200 transition-all active:scale-95">
-                    <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mx-auto sm:mx-0 group-hover:scale-110 transition-transform">
-                       <Speaker className="w-6 h-6 text-slate-700" />
-                    </div>
-                    <div className="text-center sm:text-left">
-                      <h4 className="font-bold text-[#222222] text-lg">Audio</h4>
-                      <p className="text-slate-500 text-sm font-medium mt-1">Mics & speakers</p>
-                    </div>
-                  </Link>
-                  <Link href="/search?category=gaming" className="group rounded-[24px] bg-white border border-slate-100 p-6 flex flex-col gap-4 shadow-sm hover:shadow-xl hover:border-slate-200 transition-all active:scale-95">
-                    <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mx-auto sm:mx-0 group-hover:scale-110 transition-transform">
-                       <Gamepad2 className="w-6 h-6 text-slate-700" />
-                    </div>
-                    <div className="text-center sm:text-left">
-                      <h4 className="font-bold text-[#222222] text-lg">Gaming</h4>
-                      <p className="text-slate-500 text-sm font-medium mt-1">Consoles & VR</p>
+              <h3 className="text-[22px] font-bold text-[#1a1a1a] px-2">Popular Categories</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                {[
+                  { label: 'Cameras', sub: 'Lenses & rigs', icon: Camera, href: '/search?category=camera', bg: 'bg-[#d4f07a]/20 group-hover:bg-[#d4f07a]' },
+                  { label: 'Audio', sub: 'Mics & speakers', icon: Speaker, href: '/search?category=audio', bg: 'bg-blue-100/50 group-hover:bg-blue-100' },
+                  { label: 'Gaming', sub: 'Consoles & VR', icon: Gamepad2, href: '/search?category=gaming', bg: 'bg-purple-100/50 group-hover:bg-purple-100' },
+                  { label: 'Tech', sub: 'Laptops & iPads', icon: Sparkles, href: '/search?category=tech', bg: 'bg-orange-100/50 group-hover:bg-orange-100' },
+                ].map((cat) => (
+                  <Link key={cat.label} href={cat.href}>
+                    <div className="glass-card rounded-3xl p-8 flex flex-col items-start gap-4 group cursor-pointer">
+                      <div className={`p-3 rounded-2xl ${cat.bg} transition-colors`}>
+                        <cat.icon className="w-6 h-6 text-gray-800" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-[#1a1a1a] text-lg">{cat.label}</h4>
+                        <p className="text-gray-400 text-sm mt-0.5">{cat.sub}</p>
+                      </div>
                     </div>
                   </Link>
-                  <Link href="/search?category=tech" className="group rounded-[24px] bg-white border border-slate-100 p-6 flex flex-col gap-4 shadow-sm hover:shadow-xl hover:border-slate-200 transition-all active:scale-95">
-                    <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mx-auto sm:mx-0 group-hover:scale-110 transition-transform">
-                       <Sparkles className="w-6 h-6 text-amber-500" />
-                    </div>
-                    <div className="text-center sm:text-left">
-                      <h4 className="font-bold text-[#222222] text-lg">Tech</h4>
-                      <p className="text-slate-500 text-sm font-medium mt-1">Laptops & iPads</p>
-                    </div>
-                  </Link>
+                ))}
               </div>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 animate-in fade-in slide-in-from-bottom-3 duration-700">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {items.map((item) => (
               <ItemCard key={item.id} item={item} />
             ))}
           </div>
         )}
-      </div>
+      </section>
+
+      {/* ── Footer ──────────────────────────────────────────── */}
+      <footer className="bg-[#1a1a1a] py-12 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="text-[#d4f07a] font-extrabold text-xl tracking-tighter">
+            Rent<span className="text-white">O</span>
+          </div>
+          <p className="text-gray-500 text-sm font-medium">
+            © 2025 RentO Equipment Rentals. All rights reserved.
+          </p>
+          <div className="flex gap-6 text-sm text-gray-500">
+            <a href="#" className="hover:text-[#d4f07a] transition-colors">Privacy</a>
+            <a href="#" className="hover:text-[#d4f07a] transition-colors">Terms</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
